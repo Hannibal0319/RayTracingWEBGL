@@ -6,28 +6,31 @@ var program;
 
 // Scene Data - Now includes parameters for three spheres
 const SCENE_DATA = {
-    // SPHERE 0: REFLECTIVE (Left)
-    sphereCenter0: [-1.5, -0.2, -4.5], 
-    sphereRadius0: 0.8,
-    sphereDiffuseColor0: [0.9, 0.9, 0.9], // Silver
-    sphereReflectivity0: 0.9,
-    sphereIOR0: 1.0, // Non-refractive
+    // SPHERE 0: THE LIGHT SOURCE
+    lightSphereCenter: [-1.5, 3.0, -4.0], // Positioned higher up
+    lightSphereRadius: 0.5,
     
-    // SPHERE 1: REFRACTIVE (Center)
-    sphereCenter1: [-5.0, -0.0, -5.0], 
-    sphereRadius1: 1.0,
-    sphereDiffuseColor1: [0.1, 0.3, 0.4], // Light Blue/Glass tint
-    sphereReflectivity1: 0.2, // Some reflection on surface
-    sphereIOR1: 1.5, // Glass IOR
+    // SPHERE 1: REFRACTIVE (Left Foreground) - Maps to u_sphereCenters[0] in GLSL
+    sphereCenter1: [-2.0, -0.2, -5.0], // Moved left
+    sphereRadius1: 0.8,
+    sphereDiffuseColor1: [0.1, 0.3, 0.4], 
+    sphereReflectivity1: 0.5, // High reflectivity to show reflection/refraction contrast
+    sphereIOR1: 1.5, 
     
-    // SPHERE 2: SHADOW (Right)
-    sphereCenter2: [2.0, -0.4, -6.0], 
-    sphereRadius2: 0.6,
-    sphereDiffuseColor2: [0.8, 0.1, 0.6], // Red
-    sphereReflectivity2: 0.0,
+    // SPHERE 2: REFLECTIVE (Center Foreground) - Maps to u_sphereCenters[1] in GLSL
+    sphereCenter2: [0.5, 0.0, -6.0], // New sphere position
+    sphereRadius2: 1.0,
+    sphereDiffuseColor2: [0.8, 0.8, 0.8], // Silver/White
+    sphereReflectivity2: 0.9, // Mirror
     sphereIOR2: 1.0,
     
-    lightDir: [1.0, 1.0, 1.0], 
+    // SPHERE 3: SHADOW (Right Foreground) - Maps to u_sphereCenters[2] in GLSL
+    sphereCenter3: [3.0, -0.4, -7.0], 
+    sphereRadius3: 0.6,
+    sphereDiffuseColor3: [0.8, 0.1, 0.1], 
+    sphereReflectivity3: 0.0,
+    sphereIOR3: 1.0,
+    
     planeY: -1.0, 
     planeColorA: [0.3, 0.3, 0.3], 
     planeColorB: [0.5, 0.5, 0.5], 

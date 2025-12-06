@@ -2,47 +2,49 @@ precision highp float;
 
 // Scene Uniforms
 uniform vec2 u_resolution;
-uniform vec3 u_lightDir;
+uniform vec3 u_lightSphereCenter; // Center of the sphere light
+uniform float u_lightSphereRadius; // Radius of the sphere light
 uniform float u_planeY;
 uniform vec3 u_planeColorA;
 uniform vec3 u_planeColorB;
 
-// Sphere Data Uniforms (Array of structs would be ideal, but we use flat arrays for WebGL 1.0 compatibility)
-uniform vec3 u_sphereCenters[3];
-uniform float u_sphereRadii[3];
-uniform vec3 u_sphereDiffuseColors[3];
-uniform float u_sphereReflectivity[3]; // 0.0=Diffuse, 1.0=Mirror
-uniform float u_sphereIOR[3];          // Index of Refraction (1.0=Air, 1.5=Glass)
+// Sphere Data Uniforms (Indices 1, 2, and 3 for the scene objects)
+uniform vec3 u_sphereCenters[3]; 
+uniform float u_sphereRadii[3];  
+uniform vec3 u_sphereDiffuseColors[3]; 
+uniform float u_sphereReflectivity[3]; 
+uniform float u_sphereIOR[3];          
 
 // CAMERA UNIFORMS
 uniform vec3 u_cameraPos;
 uniform vec2 u_cameraRotation;
 
 // Constants
-const vec3 BACKGROUND_COLOR = vec3(0.05, 0.05, 0.15); 
-const float AMBIENT_INTENSITY = 0.1;
+const vec3 SKY_HORIZON_COLOR = vec3(1.0, 1.0, 1.0);     // White at the horizon (y=0)
+const vec3 SKY_ZENITH_COLOR = vec3(0.1, 0.4, 0.7);      // Deeper blue at zenith
+const vec3 LIGHT_EMISSION = vec3(5.0, 5.0, 4.0); // Bright yellowish light
+const float AMBIENT_INTENSITY = 0.15; // Increased ambient light to simulate scattered illumination
 const float EPSILON = 0.001;
-const int MAX_BOUNCES = 3; // Maximum number of secondary rays (bounces)
+const int MAX_BOUNCES = 3; 
 
 // Material IDs (Indices for the uniform arrays)
-const int REFLECTIVE_SPHERE_ID = 0;
-const int REFRACTIVE_SPHERE_ID = 1;
-const int SHADOW_SPHERE_ID = 2;
+const int REFRACTIVE_SPHERE_ID = 0; // SphereCenters[0] in GLSL maps to sphereCenter1 in JS
+const int REFLECTIVE_SPHERE_ID = 1; // SphereCenters[1] in GLSL maps to sphereCenter2 in JS
+const int SHADOW_SPHERE_ID = 2;     // SphereCenters[2] in GLSL maps to sphereCenter3 in JS
 const int PLANE_ID = 3;
 
 // --- Data Structure for a Ray Hit ---
 struct HitRecord {
-    float t;             // Distance to hit
-    vec3 normal;         // Surface normal
-    vec3 color;          // Diffuse color
-    float reflectivity;  // Reflection coefficient
-    float ior;           // Index of Refraction (IOR)
-    int materialID;      // Identifies the hit object (Sphere index or Plane)
+    float t;             
+    vec3 normal;         
+    vec3 color;          
+    float reflectivity;  
+    float ior;           
+    int materialID;      
 };
 
 // --- Utility Functions ---
 
-// Rotation matrix around the X axis (Pitch)
 mat3 rotateX(float angle) {
     float s = sin(angle);
     float c = cos(angle);
@@ -53,7 +55,6 @@ mat3 rotateX(float angle) {
     );
 }
 
-// Rotation matrix around the Y axis (Yaw)
 mat3 rotateY(float angle) {
     float s = sin(angle);
     float c = cos(angle);
@@ -105,8 +106,8 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
     HitRecord closestHit;
     closestHit.t = -1.0;
     
-    // --- 1. Check Spheres ---
-    for (int i = 0; i < 3; ++i) {
+    // --- 1. Check Scene Spheres (now 3) ---
+    for (int i = 0; i < 3; ++i) { // Loop changed back to 3
         float t = intersectSphere(rayOrigin, rayDir, u_sphereCenters[i], u_sphereRadii[i]);
         
         if (t > EPSILON && (closestHit.t < 0.0 || t < closestHit.t)) {
@@ -148,19 +149,22 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
 
 /**
     * Checks if the hit point is shadowed from the light source.
-    * Returns 1.0 if lit, 0.0 if shadowed.
+    * Returns 1.0 if lit, 0.2 if shadowed (0.2 is the ambient contribution).
     */
 float calculateShadow(vec3 hitPoint, vec3 N) {
-    vec3 shadowRayDir = normalize(u_lightDir);
-    
-    // Push shadow ray origin slightly outward to prevent self-shadowing
+    vec3 lightVec = u_lightSphereCenter - hitPoint; // Vector from hit point to light center
+    vec3 shadowRayDir = normalize(lightVec);
+    float distanceToLight = length(lightVec); 
+
+    // Push shadow ray origin slightly outward
     vec3 shadowRayOrigin = hitPoint + N * EPSILON * 5.0; 
 
-    // Check if shadow ray hits any object (only spheres for simplicity)
-    for (int i = 0; i < 3; ++i) {
+    // Check if shadow ray hits any object before reaching the light
+    for (int i = 0; i < 3; ++i) { // Loop changed back to 3
         float t = intersectSphere(shadowRayOrigin, shadowRayDir, u_sphereCenters[i], u_sphereRadii[i]);
-        if (t > 0.0) {
-            return 0.2; // Return dark shadow factor (ambient is still present)
+        // Intersection must be positive AND closer than the light source distance
+        if (t > EPSILON && t < distanceToLight) { 
+            return 0.2; // Shadowed
         }
     }
     return 1.0; // Fully lit
@@ -168,27 +172,41 @@ float calculateShadow(vec3 hitPoint, vec3 N) {
 
 
 /**
-    * Calculates the color contribution of a single bounce.
-    */
-vec3 shade(HitRecord hit, vec3 rayOrigin, vec3 rayDir) { // FIX: Added rayOrigin argument
+* Calculates the color contribution of a single bounce.
+*/
+vec3 shade(HitRecord hit, vec3 rayOrigin, vec3 rayDir) {
     vec3 finalColor = vec3(0.0);
     
     vec3 hitPoint = rayOrigin + rayDir * hit.t;
     vec3 N = hit.normal;
     
-    // --- 1. Lighting (Diffuse + Ambient) ---
+    // --- Sphere Light Calculation ---
+    vec3 lightVec = u_lightSphereCenter - hitPoint;
+    vec3 normalizedLightDir = normalize(lightVec);
+    
+    // Attenuation (Light Intensity Falloff)
+    float distanceToLightSq = dot(lightVec, lightVec);
+    float attenuation = 1.0 / (1.0 + 0.1 * distanceToLightSq);
+    
+    // --- Lighting (Diffuse + Ambient) ---
     float lightFactor = calculateShadow(hitPoint, N);
     
-    vec3 normalizedLightDir = normalize(u_lightDir);
     float diffuseIntensity = max(0.0, dot(N, normalizedLightDir));
     
-    // Local color calculation (Includes ambient and shadow)
-    finalColor = hit.color * (AMBIENT_INTENSITY + diffuseIntensity * lightFactor);
+    // NEW: Define ambient term based on material
+    vec3 ambientColor = vec3(AMBIENT_INTENSITY);
+    
+    if (hit.materialID == PLANE_ID) {
+        // Simulate soft sky ambient lighting for the ground plane
+        // Use the horizon color to ensure the fade to white is smooth
+        ambientColor = mix(vec3(AMBIENT_INTENSITY * 0.5), SKY_HORIZON_COLOR * 0.7, 0.9);
+    }
+
+    // Local color calculation: Ambient + Diffuse * Shadow Factor * Attenuation (x3.0 for balance)
+    finalColor = hit.color * (ambientColor + diffuseIntensity * lightFactor * attenuation * 3.0);
     
     return finalColor;
 }
-
-
 // --- Main Function (Ray Tracing Loop) ---
 void main() {
     // --- Primary Ray Setup ---
@@ -214,18 +232,50 @@ void main() {
     
     for (int bounce = 0; bounce < MAX_BOUNCES; ++bounce) {
         
+        // 1. Check for Light Source Hit (Highest priority)
+        float t_light = intersectSphere(currentRayOrigin, currentRayDir, u_lightSphereCenter, u_lightSphereRadius);
+        if (t_light > EPSILON) {
+            accumulatedColor += totalWeight * LIGHT_EMISSION;
+            break;
+        }
+        
+        // 2. Check for Scene Object Hit
         HitRecord hit = findClosestHit(currentRayOrigin, currentRayDir);
         
         if (hit.t < 0.0) {
-            // Missed everything, add background weighted by remaining energy
-            accumulatedColor += totalWeight * BACKGROUND_COLOR;
+            // Missed everything, fallback to gradient sky color
+            
+            // Normalize the Y direction (clamped from 0 to 1 for smooth mixing)
+            // currentRayDir.y ranges from -1 (down) to 1 (up), we want to map 0 to 1
+            float skyFactor = max(0.0, currentRayDir.y);
+            
+            vec3 missedColor = mix(SKY_HORIZON_COLOR, SKY_ZENITH_COLOR, skyFactor); // Gradient mix
+
+            // New: Use a broader, softer term to simulate light scattering across the hemisphere
+            vec3 lightPosNormalized = normalize(u_lightSphereCenter); 
+            
+            // Cosine of angle between ray and light direction (max when looking AT light)
+            float illuminationFactor = max(0.0, dot(-currentRayDir, lightPosNormalized)); 
+            
+            // Scatter: Wider soft illumination (Power 5.0)
+            float scatter = pow(illuminationFactor, 5.0) * 0.5; 
+            // Glow: Sharp sun disk glow (Power 25.0)
+            float glow = pow(illuminationFactor, 25.0) * 1.0; 
+            
+            // Blend soft scatter with the sky
+            missedColor = mix(missedColor, LIGHT_EMISSION * 0.3, scatter);
+            
+            // Blend sharp glow (sun disk) with the result
+            missedColor = mix(missedColor, LIGHT_EMISSION * 1.0, glow); 
+            
+            accumulatedColor += totalWeight * missedColor;
             break;
         }
         
         vec3 hitPoint = currentRayOrigin + currentRayDir * hit.t;
         
         // --- 1. Calculate Local Shading ---
-        vec3 localColor = shade(hit, currentRayOrigin, currentRayDir); // FIX: Passed currentRayOrigin
+        vec3 localColor = shade(hit, currentRayOrigin, currentRayDir); 
         
         // --- 2. Accumulate Color ---
         accumulatedColor += totalWeight * localColor * (1.0 - hit.reflectivity);
@@ -237,28 +287,23 @@ void main() {
         if (hit.materialID == REFRACTIVE_SPHERE_ID) {
             // Refraction (Glass sphere)
             
-            // Determine if the ray is entering or exiting the sphere
-            float n1 = 1.0; // Air IOR
-            float n2 = hit.ior; // Glass IOR
+            float n1 = 1.0; 
+            float n2 = hit.ior; 
             vec3 N = hit.normal;
             
             if (dot(hit.normal, currentRayDir) > 0.0) {
-                // Exiting the sphere
                 n1 = hit.ior;
                 n2 = 1.0; 
-                N = -N; // Flip normal to point outwards
+                N = -N; 
             }
             
             vec3 refractedDir = refract(currentRayDir, N, n1 / n2);
 
             if (length(refractedDir) < EPSILON) {
-                // Total Internal Reflection (TIR) - treat as a perfect reflection
                 currentRayDir = reflect(currentRayDir, N);
             } else {
-                // Refraction occurred
                 currentRayDir = refractedDir;
             }
-            // Reset reflectivity for the next bounce (it's handled by the IOR)
             totalWeight = 1.0; 
 
         } else {
@@ -267,7 +312,6 @@ void main() {
         }
         
         // --- 4. Prepare for Next Bounce ---
-        // Push ray origin away from the surface to prevent self-intersection
         currentRayOrigin = hitPoint + hit.normal * EPSILON * 5.0; 
     }
     

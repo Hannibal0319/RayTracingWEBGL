@@ -28,50 +28,33 @@ function render() {
     const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
 
-    const lightDirLocation = gl.getUniformLocation(program, 'u_lightDir');
-    gl.uniform3fv(lightDirLocation, SCENE_DATA.lightDir);
+    // LIGHT SPHERE UNIFORMS
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_lightSphereCenter'), SCENE_DATA.lightSphereCenter);
+    gl.uniform1f(gl.getUniformLocation(program, 'u_lightSphereRadius'), SCENE_DATA.lightSphereRadius);
     
     // Ground Plane Uniforms
-    const planeYLocation = gl.getUniformLocation(program, 'u_planeY');
-    gl.uniform1f(planeYLocation, SCENE_DATA.planeY);
-
-    const planeColorALocation = gl.getUniformLocation(program, 'u_planeColorA');
-    gl.uniform3fv(planeColorALocation, SCENE_DATA.planeColorA);
-
-    const planeColorBLocation = gl.getUniformLocation(program, 'u_planeColorB');
-    gl.uniform3fv(planeColorBLocation, SCENE_DATA.planeColorB);
+    gl.uniform1f(gl.getUniformLocation(program, 'u_planeY'), SCENE_DATA.planeY);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_planeColorA'), SCENE_DATA.planeColorA);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_planeColorB'), SCENE_DATA.planeColorB);
     
     // Camera Uniforms
-    const cameraPosLocation = gl.getUniformLocation(program, 'u_cameraPos');
-    gl.uniform3fv(cameraPosLocation, SCENE_DATA.cameraPos);
-    
-    const cameraRotLocation = gl.getUniformLocation(program, 'u_cameraRotation');
-    gl.uniform2fv(cameraRotLocation, SCENE_DATA.cameraRotation);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_cameraPos'), SCENE_DATA.cameraPos);
+    gl.uniform2fv(gl.getUniformLocation(program, 'u_cameraRotation'), SCENE_DATA.cameraRotation);
 
-    // NEW: Sphere Array Uniforms (Must be loaded as arrays)
-    const sphereCenters = [
-        SCENE_DATA.sphereCenter0, SCENE_DATA.sphereCenter1, SCENE_DATA.sphereCenter2
-    ].flat();
+    // Scene Sphere Array Uniforms (Indices 1, 2, and 3)
+    const sphereCenters = [SCENE_DATA.sphereCenter1, SCENE_DATA.sphereCenter2, SCENE_DATA.sphereCenter3].flat();
     gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereCenters'), sphereCenters);
 
-    const sphereRadii = [
-        SCENE_DATA.sphereRadius0, SCENE_DATA.sphereRadius1, SCENE_DATA.sphereRadius2
-    ];
+    const sphereRadii = [SCENE_DATA.sphereRadius1, SCENE_DATA.sphereRadius2, SCENE_DATA.sphereRadius3];
     gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereRadii'), sphereRadii);
     
-    const sphereDiffuseColors = [
-        SCENE_DATA.sphereDiffuseColor0, SCENE_DATA.sphereDiffuseColor1, SCENE_DATA.sphereDiffuseColor2
-    ].flat();
+    const sphereDiffuseColors = [SCENE_DATA.sphereDiffuseColor1, SCENE_DATA.sphereDiffuseColor2, SCENE_DATA.sphereDiffuseColor3].flat();
     gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereDiffuseColors'), sphereDiffuseColors);
 
-    const sphereReflectivity = [
-        SCENE_DATA.sphereReflectivity0, SCENE_DATA.sphereReflectivity1, SCENE_DATA.sphereReflectivity2
-    ];
+    const sphereReflectivity = [SCENE_DATA.sphereReflectivity1, SCENE_DATA.sphereReflectivity2, SCENE_DATA.sphereReflectivity3];
     gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereReflectivity'), sphereReflectivity);
 
-    const sphereIOR = [
-        SCENE_DATA.sphereIOR0, SCENE_DATA.sphereIOR1, SCENE_DATA.sphereIOR2
-    ];
+    const sphereIOR = [SCENE_DATA.sphereIOR1, SCENE_DATA.sphereIOR2, SCENE_DATA.sphereIOR3];
     gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereIOR'), sphereIOR);
 
     // 3. Draw the Quad
