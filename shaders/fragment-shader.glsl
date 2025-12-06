@@ -28,6 +28,7 @@ const vec3 LIGHT_EMISSION = vec3(5.0, 5.0, 4.0); // Bright yellowish light
 const float AMBIENT_INTENSITY = 0.15; // Increased ambient light to simulate scattered illumination
 const float EPSILON = 0.001;
 const int MAX_BOUNCES = 3; 
+const int SAMPLES_PER_PIXEL = 10; // Number of samples for anti-aliasing
 
 // Material IDs (Indices for the uniform arrays)
 const int REFRACTIVE_SPHERE_ID = 0; // SphereCenters[0] in GLSL maps to sphereCenter1 in JS
@@ -46,6 +47,11 @@ struct HitRecord {
 };
 
 // --- Utility Functions ---
+
+// Simple pseudo-random number generator
+float random(vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+}
 
 mat3 rotateX(float angle) {
     float s = sin(angle);
@@ -231,24 +237,9 @@ vec3 shade(HitRecord hit, vec3 rayOrigin, vec3 rayDir) {
     
     return finalColor;
 }
-// --- Main Function (Ray Tracing Loop) ---
-void main() {
-    // --- Primary Ray Setup ---
-    vec2 fragCoord = gl_FragCoord.xy;
-    float aspect = u_resolution.x / u_resolution.y;
-    vec2 uv = (2.0 * fragCoord.xy - u_resolution.xy) / u_resolution.y; 
-    
-    vec3 rayOrigin = u_cameraPos;
-    vec3 rayDirUnrotated = normalize(vec3(uv.x, uv.y, -1.0));
-    
-    // Apply camera rotation
-    vec3 rayDir = rayDirUnrotated;
-    rayDir = rotateX(u_cameraRotation.y) * rayDir;
-    rayDir = rotateY(u_cameraRotation.x) * rayDir;
-    rayDir = normalize(rayDir); 
 
-    
-    // --- Tracing Loop (Iterative Multi-Bounce) ---
+// --- Ray Tracing Function for a Single Ray ---
+vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
     vec3 accumulatedColor = vec3(0.0);
     vec3 currentRayOrigin = rayOrigin;
     vec3 currentRayDir = rayDir;
@@ -338,6 +329,37 @@ void main() {
         // --- 4. Prepare for Next Bounce ---
         currentRayOrigin = hitPoint + hit.normal * EPSILON * 5.0; 
     }
+    return accumulatedColor;
+}
+
+// --- Main Function (Anti-Aliasing Loop) ---
+void main() {
+    vec3 finalColor = vec3(0.0);
+    vec2 pixelSize = 1.0 / u_resolution.xy;
+
+    for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {
+        // --- Primary Ray Setup with Jitter for Anti-Aliasing ---
+        // Generate a random offset within the pixel
+        vec2 jitter = vec2(random(gl_FragCoord.xy + float(i)), random(gl_FragCoord.xy - float(i))) - 0.5;
+        vec2 fragCoord = gl_FragCoord.xy + jitter;
+        
+        vec2 uv = (2.0 * fragCoord - u_resolution.xy) / u_resolution.y; 
+        
+        vec3 rayOrigin = u_cameraPos;
+        vec3 rayDirUnrotated = normalize(vec3(uv.x, uv.y, -1.0));
+        
+        // Apply camera rotation
+        vec3 rayDir = rayDirUnrotated;
+        rayDir = rotateX(u_cameraRotation.y) * rayDir;
+        rayDir = rotateY(u_cameraRotation.x) * rayDir;
+        rayDir = normalize(rayDir); 
+
+        // Trace the ray and accumulate the color
+        finalColor += traceRay(rayOrigin, rayDir);
+    }
     
-    gl_FragColor = vec4(accumulatedColor, 1.0);
+    // Average the color over all samples
+    finalColor /= float(SAMPLES_PER_PIXEL);
+    
+    gl_FragColor = vec4(finalColor, 1.0);
 }

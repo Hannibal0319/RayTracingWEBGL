@@ -128,6 +128,29 @@ function setupMouseControls() {
         mouse.lastY = mouse.y;
     });
 
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault(); // Prevent the page from scrolling
+
+        const zoomSpeed = 0.2;
+        const zoomDirection = e.deltaY < 0 ? 1.0 : -1.0; // Scroll up to zoom in, down to zoom out
+
+        // This is a simple dolly zoom. We move the camera along its forward vector.
+        const yaw = SCENE_DATA.cameraRotation[0];
+        const pitch = SCENE_DATA.cameraRotation[1];
+
+        // Calculate the forward vector based on current camera rotation
+        const forwardX = Math.sin(yaw) * Math.cos(pitch);
+        const forwardY = Math.sin(pitch);
+        const forwardZ = -Math.cos(yaw) * Math.cos(pitch);
+        
+        // Update camera position
+        SCENE_DATA.cameraPos[0] += forwardX * zoomSpeed * zoomDirection;
+        SCENE_DATA.cameraPos[1] += forwardY * zoomSpeed * zoomDirection;
+        SCENE_DATA.cameraPos[2] += forwardZ * zoomSpeed * zoomDirection;
+
+        // No need to call render() here as the animate loop will pick up the change
+    });
+
     window.addEventListener('resize', render); // Keep resize handler
 }
 
