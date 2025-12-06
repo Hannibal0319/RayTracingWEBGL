@@ -42,11 +42,23 @@ function render() {
     gl.uniform2fv(gl.getUniformLocation(program, 'u_cameraRotation'), SCENE_DATA.cameraRotation);
 
     // Scene Sphere Array Uniforms (Indices 1, 2, and 3)
-    const sphereCenters = [SCENE_DATA.sphereCenter1, SCENE_DATA.sphereCenter2, SCENE_DATA.sphereCenter3].flat();
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereCenters'), sphereCenters);
+    const sphereCenters = [SCENE_DATA.sphereCenter1, SCENE_DATA.sphereCenter2, SCENE_DATA.sphereCenter3];
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereCenters'), sphereCenters.flat());
 
     const sphereRadii = [SCENE_DATA.sphereRadius1, SCENE_DATA.sphereRadius2, SCENE_DATA.sphereRadius3];
     gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereRadii'), sphereRadii);
+
+    // Calculate AABBs for each sphere
+    const sphereAABB_mins = [];
+    const sphereAABB_maxs = [];
+    for (let i = 0; i < 3; i++) {
+        const center = sphereCenters[i];
+        const radius = sphereRadii[i];
+        sphereAABB_mins.push([center[0] - radius, center[1] - radius, center[2] - radius]);
+        sphereAABB_maxs.push([center[0] + radius, center[1] + radius, center[2] + radius]);
+    }
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereAABB_min'), sphereAABB_mins.flat());
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereAABB_max'), sphereAABB_maxs.flat());
     
     const sphereDiffuseColors = [SCENE_DATA.sphereDiffuseColor1, SCENE_DATA.sphereDiffuseColor2, SCENE_DATA.sphereDiffuseColor3].flat();
     gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereDiffuseColors'), sphereDiffuseColors);
@@ -61,8 +73,24 @@ function render() {
     gl.drawArrays(gl.TRIANGLES, 0, 6); // Draw 6 vertices (2 triangles)
 }
 
+// FPS Counter state
+let frameCount = 0;
+let lastTime = performance.now();
+const fpsElement = document.getElementById('fps-counter');
+
 // NEW: Continuous Animation Loop
-function animate() {
+function animate(now) {
+    // FPS calculation
+    if (fpsElement) {
+        frameCount++;
+        const deltaTime = now - lastTime;
+        if (deltaTime >= 1000) {
+            fpsElement.textContent = `FPS: ${frameCount}`;
+            frameCount = 0;
+            lastTime = now;
+        }
+    }
+
     render();
     requestAnimationFrame(animate);
 }

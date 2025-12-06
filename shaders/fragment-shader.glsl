@@ -11,6 +11,8 @@ uniform vec3 u_planeColorB;
 // Sphere Data Uniforms (Indices 1, 2, and 3 for the scene objects)
 uniform vec3 u_sphereCenters[3]; 
 uniform float u_sphereRadii[3];  
+uniform vec3 u_sphereAABB_min[3]; // AABB min corners
+uniform vec3 u_sphereAABB_max[3]; // AABB max corners
 uniform vec3 u_sphereDiffuseColors[3]; 
 uniform float u_sphereReflectivity[3]; 
 uniform float u_sphereIOR[3];          
@@ -68,6 +70,25 @@ mat3 rotateY(float angle) {
 
 // --- Intersection Functions ---
 
+/**
+ * Ray-AABB intersection test using the slab method.
+ * Returns true if the ray intersects the box, false otherwise.
+ */
+bool intersectAABB(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax) {
+    vec3 tMin = (boxMin - rayOrigin) / rayDir;
+    vec3 tMax = (boxMax - rayOrigin) / rayDir;
+    
+    vec3 t1 = min(tMin, tMax);
+    vec3 t2 = max(tMin, tMax);
+    
+    float tNear = max(max(t1.x, t1.y), t1.z);
+    float tFar = min(min(t2.x, t2.y), t2.z);
+    
+    // A hit occurs if the last entry point (tNear) is before the first exit point (tFar),
+    // and the intersection is not behind the ray's origin (tFar > 0.0).
+    return tNear < tFar && tFar > 0.0;
+}
+
 float intersectSphere(vec3 rayOrigin, vec3 rayDir, vec3 center, float radius) {
     vec3 oc = rayOrigin - center;
     float a = dot(rayDir, rayDir);
@@ -108,17 +129,20 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
     
     // --- 1. Check Scene Spheres (now 3) ---
     for (int i = 0; i < 3; ++i) { // Loop changed back to 3
-        float t = intersectSphere(rayOrigin, rayDir, u_sphereCenters[i], u_sphereRadii[i]);
-        
-        if (t > EPSILON && (closestHit.t < 0.0 || t < closestHit.t)) {
-            closestHit.t = t;
-            closestHit.materialID = i;
+        // AABB check: Only test for sphere intersection if the ray hits its bounding box
+        if (intersectAABB(rayOrigin, rayDir, u_sphereAABB_min[i], u_sphereAABB_max[i])) {
+            float t = intersectSphere(rayOrigin, rayDir, u_sphereCenters[i], u_sphereRadii[i]);
             
-            vec3 hitPoint = rayOrigin + rayDir * t;
-            closestHit.normal = normalize(hitPoint - u_sphereCenters[i]);
-            closestHit.color = u_sphereDiffuseColors[i];
-            closestHit.reflectivity = u_sphereReflectivity[i];
-            closestHit.ior = u_sphereIOR[i];
+            if (t > EPSILON && (closestHit.t < 0.0 || t < closestHit.t)) {
+                closestHit.t = t;
+                closestHit.materialID = i;
+                
+                vec3 hitPoint = rayOrigin + rayDir * t;
+                closestHit.normal = normalize(hitPoint - u_sphereCenters[i]);
+                closestHit.color = u_sphereDiffuseColors[i];
+                closestHit.reflectivity = u_sphereReflectivity[i];
+                closestHit.ior = u_sphereIOR[i];
+            }
         }
     }
 
