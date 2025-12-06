@@ -158,15 +158,27 @@ function setupWASDControls() {
     const moveSpeed = 0.1;
     window.addEventListener('keydown', (e) => {
         const yaw = SCENE_DATA.cameraRotation[0];
-        const forward = [Math.sin(yaw), 0, -Math.cos(yaw)];
+        const pitch = SCENE_DATA.cameraRotation[1];
+
+        // Calculate forward vector including pitch for looking up/down
+        const forward = [
+            Math.sin(yaw) * Math.cos(pitch),
+            -Math.sin(pitch),
+            -Math.cos(yaw) * Math.cos(pitch)
+        ];
+
+        // Right vector should always be horizontal (on the XZ plane)
         const right = [Math.cos(yaw), 0, Math.sin(yaw)];
-        switch (e.key) {
+
+        switch (e.key.toLowerCase()) { // Use toLowerCase() to handle Caps Lock
             case 'w':
                 SCENE_DATA.cameraPos[0] += forward[0] * moveSpeed;
+                SCENE_DATA.cameraPos[1] += forward[1] * moveSpeed;
                 SCENE_DATA.cameraPos[2] += forward[2] * moveSpeed;
                 break;
             case 's':
                 SCENE_DATA.cameraPos[0] -= forward[0] * moveSpeed;
+                SCENE_DATA.cameraPos[1] -= forward[1] * moveSpeed;
                 SCENE_DATA.cameraPos[2] -= forward[2] * moveSpeed;
                 break;
             case 'a':
@@ -178,7 +190,6 @@ function setupWASDControls() {
                 SCENE_DATA.cameraPos[2] += right[2] * moveSpeed;
                 break;
         }
-        render(); // Re-render the scene after camera movement
     });
 }
 
