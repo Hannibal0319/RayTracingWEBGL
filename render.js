@@ -40,6 +40,8 @@ function render() {
     // Camera Uniforms
     gl.uniform3fv(gl.getUniformLocation(program, 'u_cameraPos'), SCENE_DATA.cameraPos);
     gl.uniform2fv(gl.getUniformLocation(program, 'u_cameraRotation'), SCENE_DATA.cameraRotation);
+    gl.uniform1f(gl.getUniformLocation(program, 'u_aperture'), SCENE_DATA.aperture);
+    gl.uniform1f(gl.getUniformLocation(program, 'u_focalDistance'), SCENE_DATA.focalDistance);
 
     // Scene Sphere Array Uniforms (Indices 1, 2, and 3)
     const sphereCenters = [SCENE_DATA.sphereCenter1, SCENE_DATA.sphereCenter2, SCENE_DATA.sphereCenter3];

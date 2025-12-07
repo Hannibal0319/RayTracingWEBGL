@@ -13,14 +13,14 @@ const SCENE_DATA = {
     // SPHERE 1: REFRACTIVE (Left Foreground) - Maps to u_sphereCenters[0] in GLSL
     sphereCenter1: [-2.0, -0.2, -5.0], // Moved left
     sphereRadius1: 0.8,
-    sphereDiffuseColor1: [0.1, 0.3, 0.4], 
-    sphereReflectivity1: 0.5, // High reflectivity to show reflection/refraction contrast
+    sphereDiffuseColor1: [0.1, 0.3, 0.2], 
+    sphereReflectivity1: 0.9, // High reflectivity to show reflection/refraction contrast
     sphereIOR1: 1.5, 
     
     // SPHERE 2: REFLECTIVE (Center Foreground) - Maps to u_sphereCenters[1] in GLSL
     sphereCenter2: [0.5, 0.0, -6.0], // New sphere position
     sphereRadius2: 1.0,
-    sphereDiffuseColor2: [0.8, 0.8, 0.8], // Silver/White
+    sphereDiffuseColor2: [0.3, 0.3, 0.3], // Silver/White
     sphereReflectivity2: 0.9, // Mirror
     sphereIOR2: 1.0,
     
@@ -37,7 +37,9 @@ const SCENE_DATA = {
     
     // Camera Controls
     cameraPos: [0.0, 0.0, 0.0],
-    cameraRotation: [0.0, 0.0]
+    cameraRotation: [0.0, 0.0],
+    aperture: 0.01,       // NEW: Lens radius for defocus blur
+    focalDistance: 5.0   // NEW: Distance to the plane of perfect focus
 };
 
 // NEW: Mouse State for Interaction

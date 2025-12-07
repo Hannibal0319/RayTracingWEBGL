@@ -20,6 +20,8 @@ uniform float u_sphereIOR[3];
 // CAMERA UNIFORMS
 uniform vec3 u_cameraPos;
 uniform vec2 u_cameraRotation;
+uniform float u_aperture;
+uniform float u_focalDistance;
 
 // Constants
 const vec3 SKY_HORIZON_COLOR = vec3(1.0, 1.0, 1.0);     // White at the horizon (y=0)
@@ -299,12 +301,18 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
         vec3 hitPoint = currentRayOrigin + currentRayDir * hit.t;
         
         // --- 1. Calculate Local Shading ---
+        // The color of the surface itself (diffuse, ambient, etc.)
         vec3 localColor = shade(hit, currentRayOrigin, currentRayDir); 
         
         // --- 2. Accumulate Color ---
+        // Add the non-reflected part of the color to the result.
+        // For a perfect mirror (reflectivity=1.0), this adds nothing.
         accumulatedColor += totalWeight * localColor * (1.0 - hit.reflectivity);
+        
+        // Attenuate the energy for the next bounce by the surface's reflectivity.
         totalWeight *= hit.reflectivity;
         
+        // Optimization: if the ray has lost too much energy, stop tracing.
         if (totalWeight < 0.01) break; // Energy threshold
         
         // --- 3. Determine Next Ray Direction (Reflection/Refraction) ---
@@ -331,12 +339,13 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
             totalWeight = 1.0; 
 
         } else {
-            // Reflection
+            // Standard Reflection for all other objects (like the mirror sphere)
             currentRayDir = reflect(currentRayDir, hit.normal);
         }
         
         // --- 4. Prepare for Next Bounce ---
-        currentRayOrigin = hitPoint + hit.normal * EPSILON * 5.0; 
+        // Move the ray origin slightly off the surface to avoid self-intersection
+        currentRayOrigin = hitPoint + currentRayDir * EPSILON; 
     }
     return accumulatedColor;
 }
@@ -346,6 +355,11 @@ void main() {
     vec3 finalColor = vec3(0.0);
     vec2 pixelSize = 1.0 / u_resolution.xy;
 
+    // Construct camera basis vectors (right, up, forward) from rotation
+    mat3 camRotation = rotateY(u_cameraRotation.x) * rotateX(u_cameraRotation.y);
+    vec3 camRight = camRotation * vec3(1.0, 0.0, 0.0);
+    vec3 camUp = camRotation * vec3(0.0, 1.0, 0.0);
+
     for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {
         // --- Primary Ray Setup with Jitter for Anti-Aliasing ---
         // Generate a random offset within the pixel
@@ -354,14 +368,25 @@ void main() {
         
         vec2 uv = (2.0 * fragCoord - u_resolution.xy) / u_resolution.y; 
         
-        vec3 rayOrigin = u_cameraPos;
-        vec3 rayDirUnrotated = normalize(vec3(uv.x, uv.y, -1.0));
-        
-        // Apply camera rotation
-        vec3 rayDir = rayDirUnrotated;
-        rayDir = rotateX(u_cameraRotation.y) * rayDir;
-        rayDir = rotateY(u_cameraRotation.x) * rayDir;
-        rayDir = normalize(rayDir); 
+        // --- Defocus Blur (Depth of Field) ---
+        // 1. Calculate the ray direction from the center of the lens
+        vec3 rayDirCenter = normalize(vec3(uv.x, uv.y, -1.0));
+        rayDirCenter = camRotation * rayDirCenter;
+
+        // 2. Find the point on the focal plane where this central ray would hit
+        vec3 focalPoint = u_cameraPos + rayDirCenter * u_focalDistance;
+
+        // 3. Get a random point on the lens disk
+        vec2 randDisk = vec2(random(uv + float(i)), random(uv - float(i)));
+        float r = u_aperture * sqrt(randDisk.x);
+        float theta = 2.0 * 3.1415926535 * randDisk.y;
+        vec3 lensOffset = camRight * r * cos(theta) + camUp * r * sin(theta);
+
+        // 4. The new ray origin is the random point on the lens
+        vec3 rayOrigin = u_cameraPos + lensOffset;
+
+        // 5. The new ray direction points from the lens point to the focal point
+        vec3 rayDir = normalize(focalPoint - rayOrigin);
 
         // Trace the ray and accumulate the color
         finalColor += traceRay(rayOrigin, rayDir);
