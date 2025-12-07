@@ -29,7 +29,7 @@ const vec3 SKY_ZENITH_COLOR = vec3(0.1, 0.4, 0.7);      // Deeper blue at zenith
 const vec3 LIGHT_EMISSION = vec3(5.0, 5.0, 4.0); // Bright yellowish light
 const float AMBIENT_INTENSITY = 0.15; // Increased ambient light to simulate scattered illumination
 const float EPSILON = 0.001;
-const int MAX_BOUNCES = 3; 
+const int MAX_BOUNCES = 5; 
 const int SAMPLES_PER_PIXEL = 10; // Number of samples for anti-aliasing
 
 // Material IDs (Indices for the uniform arrays)
@@ -336,7 +336,7 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
             } else {
                 currentRayDir = refractedDir;
             }
-            totalWeight = 1.0; 
+            //totalWeight = 1.0; 
 
         } else {
             // Standard Reflection for all other objects (like the mirror sphere)
