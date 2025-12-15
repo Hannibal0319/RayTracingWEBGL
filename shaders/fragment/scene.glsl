@@ -27,7 +27,12 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
         if (t > EPSILON && (closestHit.t < 0.0 || t < closestHit.t)) {
             closestHit.t = t;
             closestHit.objectID = i + u_sphereCount; // Offset by sphere count
-                closestHit.normal = u_quadNormals[i];
+
+            vec3 n = u_quadNormals[i];
+            if (dot(n, rayDir) > 0.0) {
+                n = -n;
+            }    
+            closestHit.normal = n;
             closestHit.material.diffuseColor = u_quadDiffuseColors[i];
             closestHit.material.reflectivity = u_quadReflectivity[i];
             closestHit.material.ior = u_quadIOR[i];

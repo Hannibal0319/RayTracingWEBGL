@@ -34,6 +34,7 @@ class Quad {
         // Normal vector for the plane of the quad
         this.normal = cross(u, v);
         normalize(this.normal, this.normal);
+        
 
         // AABB for the quad
         const p1 = corner;

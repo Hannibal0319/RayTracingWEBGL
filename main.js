@@ -27,8 +27,9 @@ const SCENE_DATA = {
     quads: [
         // Gold unit square
         new Quad([1.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], new Material([1.0, 0.84, 0.0], 0.15, 1.0, LAMBERTIAN)),
-        new Quad([3.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], new Material([1.0, 0.84, 0.0], 0.15, 1.0, LAMBERTIAN))
-        
+        new Quad([3.5, -0.5, -4.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], new Material([1.0, 0.84, 0.0], 0.15, 1.0, LAMBERTIAN)),
+        new Quad([2.5, -0.5, -4.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], new Material([1.0, 0.84, 0.0], 0.15, 1.0, LAMBERTIAN))
+
     ],
     
     planeY: -1.0, 
