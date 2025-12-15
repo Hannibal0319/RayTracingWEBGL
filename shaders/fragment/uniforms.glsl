@@ -59,4 +59,4 @@ const int REFLECTIVE = 1;
 const int REFRACTIVE = 2;
 
 // Object IDs
-const int PLANE_ID = 3;
+const int PLANE_ID = MAX_SPHERES + MAX_QUADS;

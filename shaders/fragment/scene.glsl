@@ -7,18 +7,31 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
     // Check Scene Spheres
     for (int i = 0; i < MAX_SPHERES; ++i) {
         if (i >= u_sphereCount) break; // Safety break
-        if (intersectAABB(rayOrigin, rayDir, u_sphereAABB_min[i], u_sphereAABB_max[i])) {
-            float t = intersectSphere(rayOrigin, rayDir, u_sphereCenters[i], u_sphereRadii[i]);
-            if (t > EPSILON && (closestHit.t < 0.0 || t < closestHit.t)) {
-                closestHit.t = t;
-                closestHit.objectID = i;
-                vec3 hitPoint = rayOrigin + rayDir * t;
+        float t = intersectSphere(rayOrigin, rayDir, u_sphereCenters[i], u_sphereRadii[i]);
+        if (t > EPSILON && (closestHit.t < 0.0 || t < closestHit.t)) {
+            closestHit.t = t;
+            closestHit.objectID = i;
+            vec3 hitPoint = rayOrigin + rayDir * t;
                 closestHit.normal = normalize(hitPoint - u_sphereCenters[i]);
-                closestHit.material.diffuseColor = u_sphereDiffuseColors[i];
-                closestHit.material.reflectivity = u_sphereReflectivity[i];
-                closestHit.material.ior = u_sphereIOR[i];
-                closestHit.material.materialType = u_sphereMaterialTypes[i];
-            }
+            closestHit.material.diffuseColor = u_sphereDiffuseColors[i];
+            closestHit.material.reflectivity = u_sphereReflectivity[i];
+            closestHit.material.ior = u_sphereIOR[i];
+            closestHit.material.materialType = u_sphereMaterialTypes[i];
+        }
+    }
+
+    // Check Quads
+    for (int i = 0; i < MAX_QUADS; ++i) {
+        if (i >= u_quadCount) break;
+        float t = intersectQuad(rayOrigin, rayDir, u_quadCorners[i], u_quadU[i], u_quadV[i], u_quadNormals[i]);
+        if (t > EPSILON && (closestHit.t < 0.0 || t < closestHit.t)) {
+            closestHit.t = t;
+            closestHit.objectID = i + u_sphereCount; // Offset by sphere count
+                closestHit.normal = u_quadNormals[i];
+            closestHit.material.diffuseColor = u_quadDiffuseColors[i];
+            closestHit.material.reflectivity = u_quadReflectivity[i];
+            closestHit.material.ior = u_quadIOR[i];
+            closestHit.material.materialType = u_quadMaterialTypes[i];
         }
     }
 

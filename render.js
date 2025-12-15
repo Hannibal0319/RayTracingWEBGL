@@ -69,30 +69,31 @@ function render() {
     // Pass number of quads
     gl.uniform1i(gl.getUniformLocation(program, 'u_quadCount'), SCENE_DATA.quads.length);
 
-    // Extract data from quad objects
-    const quadCorners = SCENE_DATA.quads.map(q => q.corner).flat();
-    const quadU = SCENE_DATA.quads.map(q => q.u).flat();
-    const quadV = SCENE_DATA.quads.map(q => q.v).flat();
-    const quadNormals = SCENE_DATA.quads.map(q => q.normal).flat();
-    const quadAABB_mins = SCENE_DATA.quads.map(q => q.aabb_min).flat();
-    const quadAABB_maxs = SCENE_DATA.quads.map(q => q.aabb_max).flat();
-    const quadDiffuseColors = SCENE_DATA.quads.map(q => q.material.diffuseColor).flat();
-    const quadReflectivity = SCENE_DATA.quads.map(q => q.material.reflectivity);
-    const quadIOR = SCENE_DATA.quads.map(q => q.material.ior);
-    const quadMaterialTypes = SCENE_DATA.quads.map(q => q.material.materialType);
+    if (SCENE_DATA.quads.length > 0) {
+        // Extract data from quad objects
+        const quadCorners = SCENE_DATA.quads.map(q => q.corner).flat();
+        const quadU = SCENE_DATA.quads.map(q => q.u).flat();
+        const quadV = SCENE_DATA.quads.map(q => q.v).flat();
+        const quadNormals = SCENE_DATA.quads.map(q => q.normal).flat();
+        const quadAABB_mins = SCENE_DATA.quads.map(q => q.aabb_min).flat();
+        const quadAABB_maxs = SCENE_DATA.quads.map(q => q.aabb_max).flat();
+        const quadDiffuseColors = SCENE_DATA.quads.map(q => q.material.diffuseColor).flat();
+        const quadReflectivity = SCENE_DATA.quads.map(q => q.material.reflectivity);
+        const quadIOR = SCENE_DATA.quads.map(q => q.material.ior);
+        const quadMaterialTypes = SCENE_DATA.quads.map(q => q.material.materialType);
 
-    // Set quad uniforms
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadCorners'), quadCorners);
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadU'), quadU);
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadV'), quadV);
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadNormals'), quadNormals);
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadAABB_min'), quadAABB_mins);
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadAABB_max'), quadAABB_maxs);
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadDiffuseColors'), quadDiffuseColors);
-    gl.uniform1fv(gl.getUniformLocation(program, 'u_quadReflectivity'), quadReflectivity);
-    gl.uniform1fv(gl.getUniformLocation(program, 'u_quadIOR'), quadIOR);
-    gl.uniform1iv(gl.getUniformLocation(program, 'u_quadMaterialTypes'), quadMaterialTypes);
-
+        // Set quad uniforms
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_quadCorners'), quadCorners);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_quadU'), quadU);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_quadV'), quadV);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_quadNormals'), quadNormals);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_quadAABB_min'), quadAABB_mins);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_quadAABB_max'), quadAABB_maxs);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_quadDiffuseColors'), quadDiffuseColors);
+        gl.uniform1fv(gl.getUniformLocation(program, 'u_quadReflectivity'), quadReflectivity);
+        gl.uniform1fv(gl.getUniformLocation(program, 'u_quadIOR'), quadIOR);
+        gl.uniform1iv(gl.getUniformLocation(program, 'u_quadMaterialTypes'), quadMaterialTypes);
+    }
 
     // 3. Draw the Quad
     gl.drawArrays(gl.TRIANGLES, 0, 6); // Draw 6 vertices (2 triangles)

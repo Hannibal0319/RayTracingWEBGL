@@ -27,7 +27,14 @@ float intersectSphere(vec3 rayOrigin, vec3 rayDir, vec3 center, float radius) {
 }
 
 float intersectQuad(vec3 rayOrigin, vec3 rayDir, vec3 Q, vec3 u, vec3 v, vec3 normal) {
-    float denom = dot(normal, rayDir);
+    vec3 N = normal; // Use a local copy of the normal
+    float denom = dot(N, rayDir);
+
+    // If the ray is hitting from behind, flip the normal
+    if (denom > 0.0) {
+        N = -N;
+        denom = -denom;
+    }
 
     // Ray is parallel to the quad plane
     if (abs(denom) < EPSILON) {
@@ -35,7 +42,7 @@ float intersectQuad(vec3 rayOrigin, vec3 rayDir, vec3 Q, vec3 u, vec3 v, vec3 no
     }
 
     // Find intersection point t
-    float t = dot(Q - rayOrigin, normal) / denom;
+    float t = dot(Q - rayOrigin, N) / denom;
     if (t <= EPSILON) {
         return -1.0;
     }
@@ -46,8 +53,11 @@ float intersectQuad(vec3 rayOrigin, vec3 rayDir, vec3 Q, vec3 u, vec3 v, vec3 no
 
     float dot_u = dot(d, u);
     float dot_v = dot(d, v);
+    float uu = dot(u, u);
+    float vv = dot(v, v);
 
-    if (dot_u >= 0.0 && dot_u <= dot(u, u) && dot_v >= 0.0 && dot_v <= dot(v, v)) {
+    // Allow a small tolerance so nearly parallel rays still register hits on edges
+    if (dot_u >= -EPSILON && dot_u <= uu + EPSILON && dot_v >= -EPSILON && dot_v <= vv + EPSILON) {
         return t;
     }
 
