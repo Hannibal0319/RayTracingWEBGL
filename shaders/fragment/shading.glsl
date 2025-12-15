@@ -6,7 +6,8 @@ float calculateShadow(vec3 hitPoint, vec3 N) {
     float distanceToLight = length(lightVec);
     vec3 shadowRayOrigin = hitPoint + N * EPSILON * 5.0;
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < MAX_SPHERES; ++i) {
+        if (i >= u_sphereCount) break; // Safety break
         float t = intersectSphere(shadowRayOrigin, shadowRayDir, u_sphereCenters[i], u_sphereRadii[i]);
         if (t > EPSILON && t < distanceToLight) {
             return 0.2; // Shadowed

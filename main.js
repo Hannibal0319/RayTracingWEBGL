@@ -4,20 +4,24 @@ var canvas;
 var positionsBuffer;
 var program;
 
+const M_GLASS = new Material([0.95, 0.95, 0.95], 0.9, 1.5, REFRACTIVE);
+const M_GOLD = new Material([1.0, 0.71, 0.29], 0.7, 0.47, REFLECTIVE);
+const M_SILVER = new Material([0.6, 0.6, 0.6], 0.7, 0.14, REFLECTIVE);
+const M_WATER = new Material([0.8, 0.9, 1.0], 0.7, 1.33, REFRACTIVE);
+
 // Scene Data
 const SCENE_DATA = {
     lightSphereCenter: [-1.5, 3.0, -4.0],
     lightSphereRadius: 0.5,
     
     spheres: [
-        // SPHERE 1: REFRACTIVE (Left Foreground)
         new Sphere([-2.0, -0.2, -5.0], 0.8, new Material([0.1, 0.3, 0.2], 0.9, 1.5, REFRACTIVE)),
         
-        // SPHERE 2: REFLECTIVE (Center Foreground)
-        new Sphere([0.5, 0.0, -6.0], 1.0, new Material([0.3, 0.3, 0.3], 0.9, 1.0, REFLECTIVE)),
+        new Sphere([-7.0, 0.0, -8.0], 1.0, M_GOLD),
         
-        // SPHERE 3: SHADOW (Right Foreground)
-        new Sphere([3.0, -0.4, -7.0], 0.6, new Material([0.8, 0.1, 0.1], 0.0, 1.0, LAMBERTIAN))
+        new Sphere([3.0, -0.4, -7.0], 0.6, new Material([0.8, 0.1, 0.1], 0.0, 1.0, LAMBERTIAN)),
+
+        new Sphere([0.0, 0.0, -7.0], 0.7, M_SILVER),
     ],
 
     quads: [

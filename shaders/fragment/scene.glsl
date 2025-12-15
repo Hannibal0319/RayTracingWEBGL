@@ -5,7 +5,8 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
     closestHit.t = -1.0;
 
     // Check Scene Spheres
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < MAX_SPHERES; ++i) {
+        if (i >= u_sphereCount) break; // Safety break
         if (intersectAABB(rayOrigin, rayDir, u_sphereAABB_min[i], u_sphereAABB_max[i])) {
             float t = intersectSphere(rayOrigin, rayDir, u_sphereCenters[i], u_sphereRadii[i]);
             if (t > EPSILON && (closestHit.t < 0.0 || t < closestHit.t)) {

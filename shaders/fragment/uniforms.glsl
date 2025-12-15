@@ -9,16 +9,18 @@ uniform vec3 u_planeColorA;
 uniform vec3 u_planeColorB;
 
 // Sphere Data Uniforms
-uniform vec3 u_sphereCenters[3];
-uniform float u_sphereRadii[3];
-uniform vec3 u_sphereAABB_min[3];
-uniform vec3 u_sphereAABB_max[3];
+const int MAX_SPHERES = 10;
+uniform int u_sphereCount;
+uniform vec3 u_sphereCenters[MAX_SPHERES];
+uniform float u_sphereRadii[MAX_SPHERES];
+uniform vec3 u_sphereAABB_min[MAX_SPHERES];
+uniform vec3 u_sphereAABB_max[MAX_SPHERES];
 
 // Material Uniforms for Spheres
-uniform vec3 u_sphereDiffuseColors[3];
-uniform float u_sphereReflectivity[3];
-uniform float u_sphereIOR[3];
-uniform int u_sphereMaterialTypes[3]; // 0: Lambertian, 1: Reflective, 2: Refractive
+uniform vec3 u_sphereDiffuseColors[MAX_SPHERES];
+uniform float u_sphereReflectivity[MAX_SPHERES];
+uniform float u_sphereIOR[MAX_SPHERES];
+uniform int u_sphereMaterialTypes[MAX_SPHERES]; // 0: Lambertian, 1: Reflective, 2: Refractive
 
 // Quad Data Uniforms
 const int MAX_QUADS = 10; // Set a max limit for quads

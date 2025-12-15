@@ -4,7 +4,7 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
     vec3 accumulatedColor = vec3(0.0);
     vec3 currentRayOrigin = rayOrigin;
     vec3 currentRayDir = rayDir;
-    float totalWeight = 1.0;
+    vec3 totalWeight = vec3(1.0);
 
     for (int bounce = 0; bounce < MAX_BOUNCES; ++bounce) {
         float t_light = intersectSphere(currentRayOrigin, currentRayDir, u_lightSphereCenter, u_lightSphereRadius);
@@ -23,9 +23,15 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
         vec3 hitPoint = currentRayOrigin + currentRayDir * hit.t;
         vec3 localColor = shade(hit, currentRayOrigin, currentRayDir);
         accumulatedColor += totalWeight * localColor * (1.0 - hit.material.reflectivity);
-        totalWeight *= hit.material.reflectivity;
+        
+        // For reflective materials, tint the totalWeight by the material color
+        if (hit.material.materialType == REFLECTIVE) {
+            totalWeight *= hit.material.reflectivity * hit.material.diffuseColor;
+        } else {
+            totalWeight *= hit.material.reflectivity;
+        }
 
-        if (totalWeight < 0.01) break;
+        if (totalWeight.x < 0.01 && totalWeight.y < 0.01 && totalWeight.z < 0.01) break;
 
         vec3 nextRayDir;
         if (hit.material.materialType == REFRACTIVE) {

@@ -43,6 +43,9 @@ function render() {
     gl.uniform1f(gl.getUniformLocation(program, 'u_aperture'), SCENE_DATA.aperture);
     gl.uniform1f(gl.getUniformLocation(program, 'u_focalDistance'), SCENE_DATA.focalDistance);
 
+    // Pass number of spheres
+    gl.uniform1i(gl.getUniformLocation(program, 'u_sphereCount'), SCENE_DATA.spheres.length);
+
     // Extract data from sphere objects
     const sphereCenters = SCENE_DATA.spheres.map(s => s.center).flat();
     const sphereRadii = SCENE_DATA.spheres.map(s => s.radius);
