@@ -43,33 +43,53 @@ function render() {
     gl.uniform1f(gl.getUniformLocation(program, 'u_aperture'), SCENE_DATA.aperture);
     gl.uniform1f(gl.getUniformLocation(program, 'u_focalDistance'), SCENE_DATA.focalDistance);
 
-    // Scene Sphere Array Uniforms (Indices 1, 2, and 3)
-    const sphereCenters = [SCENE_DATA.sphereCenter1, SCENE_DATA.sphereCenter2, SCENE_DATA.sphereCenter3];
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereCenters'), sphereCenters.flat());
+    // Extract data from sphere objects
+    const sphereCenters = SCENE_DATA.spheres.map(s => s.center).flat();
+    const sphereRadii = SCENE_DATA.spheres.map(s => s.radius);
+    const sphereAABB_mins = SCENE_DATA.spheres.map(s => s.aabb_min).flat();
+    const sphereAABB_maxs = SCENE_DATA.spheres.map(s => s.aabb_max).flat();
+    const sphereDiffuseColors = SCENE_DATA.spheres.map(s => s.material.diffuseColor).flat();
+    const sphereReflectivity = SCENE_DATA.spheres.map(s => s.material.reflectivity);
+    const sphereIOR = SCENE_DATA.spheres.map(s => s.material.ior);
+    const sphereMaterialTypes = SCENE_DATA.spheres.map(s => s.material.materialType);
 
-    const sphereRadii = [SCENE_DATA.sphereRadius1, SCENE_DATA.sphereRadius2, SCENE_DATA.sphereRadius3];
+    // Set sphere uniforms
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereCenters'), sphereCenters);
     gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereRadii'), sphereRadii);
-
-    // Calculate AABBs for each sphere
-    const sphereAABB_mins = [];
-    const sphereAABB_maxs = [];
-    for (let i = 0; i < 3; i++) {
-        const center = sphereCenters[i];
-        const radius = sphereRadii[i];
-        sphereAABB_mins.push([center[0] - radius, center[1] - radius, center[2] - radius]);
-        sphereAABB_maxs.push([center[0] + radius, center[1] + radius, center[2] + radius]);
-    }
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereAABB_min'), sphereAABB_mins.flat());
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereAABB_max'), sphereAABB_maxs.flat());
-    
-    const sphereDiffuseColors = [SCENE_DATA.sphereDiffuseColor1, SCENE_DATA.sphereDiffuseColor2, SCENE_DATA.sphereDiffuseColor3].flat();
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereAABB_min'), sphereAABB_mins);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereAABB_max'), sphereAABB_maxs);
     gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereDiffuseColors'), sphereDiffuseColors);
-
-    const sphereReflectivity = [SCENE_DATA.sphereReflectivity1, SCENE_DATA.sphereReflectivity2, SCENE_DATA.sphereReflectivity3];
     gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereReflectivity'), sphereReflectivity);
-
-    const sphereIOR = [SCENE_DATA.sphereIOR1, SCENE_DATA.sphereIOR2, SCENE_DATA.sphereIOR3];
     gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereIOR'), sphereIOR);
+    gl.uniform1iv(gl.getUniformLocation(program, 'u_sphereMaterialTypes'), sphereMaterialTypes);
+
+    // Pass number of quads
+    gl.uniform1i(gl.getUniformLocation(program, 'u_quadCount'), SCENE_DATA.quads.length);
+
+    // Extract data from quad objects
+    const quadCorners = SCENE_DATA.quads.map(q => q.corner).flat();
+    const quadU = SCENE_DATA.quads.map(q => q.u).flat();
+    const quadV = SCENE_DATA.quads.map(q => q.v).flat();
+    const quadNormals = SCENE_DATA.quads.map(q => q.normal).flat();
+    const quadAABB_mins = SCENE_DATA.quads.map(q => q.aabb_min).flat();
+    const quadAABB_maxs = SCENE_DATA.quads.map(q => q.aabb_max).flat();
+    const quadDiffuseColors = SCENE_DATA.quads.map(q => q.material.diffuseColor).flat();
+    const quadReflectivity = SCENE_DATA.quads.map(q => q.material.reflectivity);
+    const quadIOR = SCENE_DATA.quads.map(q => q.material.ior);
+    const quadMaterialTypes = SCENE_DATA.quads.map(q => q.material.materialType);
+
+    // Set quad uniforms
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadCorners'), quadCorners);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadU'), quadU);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadV'), quadV);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadNormals'), quadNormals);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadAABB_min'), quadAABB_mins);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadAABB_max'), quadAABB_maxs);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_quadDiffuseColors'), quadDiffuseColors);
+    gl.uniform1fv(gl.getUniformLocation(program, 'u_quadReflectivity'), quadReflectivity);
+    gl.uniform1fv(gl.getUniformLocation(program, 'u_quadIOR'), quadIOR);
+    gl.uniform1iv(gl.getUniformLocation(program, 'u_quadMaterialTypes'), quadMaterialTypes);
+
 
     // 3. Draw the Quad
     gl.drawArrays(gl.TRIANGLES, 0, 6); // Draw 6 vertices (2 triangles)
