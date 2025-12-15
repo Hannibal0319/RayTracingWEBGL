@@ -1,11 +1,3 @@
-#include "fragment/uniforms.glsl"
-#include "fragment/structs.glsl"
-#include "fragment/utils.glsl"
-#include "fragment/intersections.glsl"
-#include "fragment/scene.glsl"
-#include "fragment/shading.glsl"
-#include "fragment/raytracer.glsl"
-
 // --- Main Function ---
 
 void main() {
