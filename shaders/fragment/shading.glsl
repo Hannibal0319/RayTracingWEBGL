@@ -24,6 +24,15 @@ float calculateShadow(vec3 hitPoint, vec3 N) {
         }
     }
 
+    // Triangles
+    for (int i = 0; i < MAX_TRIANGLES; ++i) {
+        if (i >= u_triangleCount) break;
+        float t = intersectTriangle(shadowRayOrigin, shadowRayDir, u_triangleV0[i], u_triangleE1[i], u_triangleE2[i]);
+        if (t > EPSILON && t < distanceToLight) {
+            return 0.2;
+        }
+    }
+
     return 1.0; // Lit
 }
 
@@ -41,29 +50,34 @@ vec3 shade(HitRecord hit, vec3 rayOrigin, vec3 rayDir) {
 
     float lightFactor = calculateShadow(hitPoint, N);
     float ndotl = dot(N, normalizedLightDir);
-    // Make quads two-sided and give them stronger baseline light so vertical walls remain visible
-    float diffuseIntensity = (hit.objectID >= u_sphereCount && hit.objectID < u_sphereCount + u_quadCount)
+    int sphereEnd = u_sphereCount;
+    int quadEnd = sphereEnd + u_quadCount;
+    int triEnd = quadEnd + u_triangleCount;
+    bool isQuad = hit.objectID >= sphereEnd && hit.objectID < quadEnd;
+    bool isTriangle = hit.objectID >= quadEnd && hit.objectID < triEnd;
+    bool isPlane = hit.objectID == PLANE_ID;
+    bool isSphere = hit.objectID < sphereEnd;
+
+    // Make quads/triangles two-sided and give them stronger baseline light so vertical walls remain visible
+    float diffuseIntensity = (isQuad || isTriangle)
         ? max(0.4, abs(ndotl))
         : max(0.0, ndotl);
 
     vec3 ambientColor = vec3(AMBIENT_INTENSITY);
-    // Check if the hit object is the plane
-    if (hit.objectID == PLANE_ID) {
+    if (isPlane) {
         ambientColor = mix(vec3(AMBIENT_INTENSITY * 0.5), SKY_HORIZON_COLOR * 0.7, 0.9);
     } 
-    else if (hit.objectID >= u_sphereCount) {
-        // This is a quad, apply standard ambient
+    else if (isQuad || isTriangle) {
+        // Polygonal surfaces get standard ambient
         ambientColor = hit.material.diffuseColor * AMBIENT_INTENSITY;
     }
-    else {
-        // This is a sphere, apply standard ambient
+    else if (isSphere) {
+        // Spheres get standard ambient
         ambientColor = hit.material.diffuseColor * AMBIENT_INTENSITY;
     }
 
-    // Give quads a tiny emissive lift to stay visible when nearly edge-on
-    vec3 emissiveBoost = (hit.objectID >= u_sphereCount && hit.objectID < u_sphereCount + u_quadCount)
-        ? hit.material.diffuseColor * 0.1
-        : vec3(0.0);
+    // Give polygonal surfaces a tiny emissive lift to stay visible when nearly edge-on
+    vec3 emissiveBoost = (isQuad || isTriangle) ? hit.material.diffuseColor * 0.1 : vec3(0.0);
 
     return hit.material.diffuseColor * (ambientColor + diffuseIntensity * lightFactor * attenuation * 3.0) + emissiveBoost;
 }

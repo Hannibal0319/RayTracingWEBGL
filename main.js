@@ -8,6 +8,7 @@ const M_GLASS = new Material([0.95, 0.95, 0.95], 0.9, 1.5, REFRACTIVE);
 const M_GOLD = new Material([1.0, 0.71, 0.29], 0.7, 0.47, REFLECTIVE);
 const M_SILVER = new Material([0.6, 0.6, 0.6], 0.7, 0.14, REFLECTIVE);
 const M_WATER = new Material([0.8, 0.9, 1.0], 0.7, 1.33, REFRACTIVE);
+const M_WOOD = new Material([0.4, 0.2, 0.1], 0.1, 1.0, LAMBERTIAN);
 
 // Scene Data
 const SCENE_DATA = {
@@ -25,11 +26,14 @@ const SCENE_DATA = {
     ],
 
     quads: [
-        // Gold unit square
-        new Quad([1.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], new Material([1.0, 0.84, 0.0], 0.15, 1.0, LAMBERTIAN)),
-        new Quad([3.5, -0.5, -4.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], new Material([1.0, 0.84, 0.0], 0.15, 1.0, LAMBERTIAN)),
-        new Quad([2.5, -0.5, -4.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], new Material([1.0, 0.84, 0.0], 0.15, 1.0, LAMBERTIAN))
+        new Quad([1.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], M_GOLD),
+        new Quad([3.5, -0.5, -4.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], M_SILVER),
 
+    ],
+
+    triangles: [
+        new Triangle([-2.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], new Material([0.2, 0.6, 0.9], 0.05, 1.0, LAMBERTIAN)),
+        new Triangle([4.0, -0.5, -6.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], new Material([0.9, 0.4, 0.2], 0.2, 1.0, LAMBERTIAN))
     ],
     
     planeY: -1.0, 

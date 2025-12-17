@@ -64,6 +64,25 @@ float intersectQuad(vec3 rayOrigin, vec3 rayDir, vec3 Q, vec3 u, vec3 v, vec3 no
     return -1.0;
 }
 
+float intersectTriangle(vec3 rayOrigin, vec3 rayDir, vec3 v0, vec3 e1, vec3 e2) {
+    vec3 pvec = cross(rayDir, e2);
+    float det = dot(e1, pvec);
+
+    if (abs(det) < EPSILON) return -1.0; // Ray parallel to triangle
+
+    float invDet = 1.0 / det;
+    vec3 tvec = rayOrigin - v0;
+    float u = dot(tvec, pvec) * invDet;
+    if (u < -EPSILON || u > 1.0 + EPSILON) return -1.0;
+
+    vec3 qvec = cross(tvec, e1);
+    float v = dot(rayDir, qvec) * invDet;
+    if (v < -EPSILON || (u + v) > 1.0 + EPSILON) return -1.0;
+
+    float t = dot(e2, qvec) * invDet;
+    return t > EPSILON ? t : -1.0;
+}
+
 float intersectPlane(vec3 rayOrigin, vec3 rayDir, float planeY) {
     if (abs(rayDir.y) < EPSILON) return -1.0;
     float t = (planeY - rayOrigin.y) / rayDir.y;

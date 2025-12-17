@@ -54,3 +54,16 @@ class Quad {
         ];
     }
 }
+
+class Triangle {
+    constructor(v0, e1, e2, material) {
+        this.v0 = v0;
+        this.e1 = e1;
+        this.e2 = e2;
+        this.material = material;
+
+
+        this.normal = cross(this.e1, this.e2);
+        normalize(this.normal, this.normal);
+    }
+}

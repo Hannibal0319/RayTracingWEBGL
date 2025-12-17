@@ -95,6 +95,32 @@ function render() {
         gl.uniform1iv(gl.getUniformLocation(program, 'u_quadMaterialTypes'), quadMaterialTypes);
     }
 
+    // Triangles
+    gl.uniform1i(gl.getUniformLocation(program, 'u_triangleCount'), SCENE_DATA.triangles.length);
+    if (SCENE_DATA.triangles.length > 0) {
+        const triV0 = SCENE_DATA.triangles.map(t => t.v0).flat();
+        const triE1 = SCENE_DATA.triangles.map(t => t.e1).flat();
+        const triE2 = SCENE_DATA.triangles.map(t => t.e2).flat();
+        const triNormals = SCENE_DATA.triangles.map(t => t.normal).flat();
+        const triAABB_mins = SCENE_DATA.triangles.map(t => t.aabb_min).flat();
+        const triAABB_maxs = SCENE_DATA.triangles.map(t => t.aabb_max).flat();
+        const triDiffuseColors = SCENE_DATA.triangles.map(t => t.material.diffuseColor).flat();
+        const triReflectivity = SCENE_DATA.triangles.map(t => t.material.reflectivity);
+        const triIOR = SCENE_DATA.triangles.map(t => t.material.ior);
+        const triMaterialTypes = SCENE_DATA.triangles.map(t => t.material.materialType);
+
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleV0'), triV0);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleE1'), triE1);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleE2'), triE2);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleNormals'), triNormals);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleAABB_min'), triAABB_mins);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleAABB_max'), triAABB_maxs);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleDiffuseColors'), triDiffuseColors);
+        gl.uniform1fv(gl.getUniformLocation(program, 'u_triangleReflectivity'), triReflectivity);
+        gl.uniform1fv(gl.getUniformLocation(program, 'u_triangleIOR'), triIOR);
+        gl.uniform1iv(gl.getUniformLocation(program, 'u_triangleMaterialTypes'), triMaterialTypes);
+    }
+
     // 3. Draw the Quad
     gl.drawArrays(gl.TRIANGLES, 0, 6); // Draw 6 vertices (2 triangles)
 }

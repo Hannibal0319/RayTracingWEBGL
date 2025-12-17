@@ -40,6 +40,26 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
         }
     }
 
+    // Check Triangles
+    for (int i = 0; i < MAX_TRIANGLES; ++i) {
+        if (i >= u_triangleCount) break;
+        float t = intersectTriangle(rayOrigin, rayDir, u_triangleV0[i], u_triangleE1[i], u_triangleE2[i]);
+        if (t > EPSILON && (closestHit.t < 0.0 || t < closestHit.t)) {
+            closestHit.t = t;
+            closestHit.objectID = i + u_sphereCount + u_quadCount; // Offset by spheres and quads
+
+            vec3 n = u_triangleNormals[i];
+            if (dot(n, rayDir) > 0.0) {
+                n = -n;
+            }
+            closestHit.normal = n;
+            closestHit.material.diffuseColor = u_triangleDiffuseColors[i];
+            closestHit.material.reflectivity = u_triangleReflectivity[i];
+            closestHit.material.ior = u_triangleIOR[i];
+            closestHit.material.materialType = u_triangleMaterialTypes[i];
+        }
+    }
+
     // Check Plane
     float t_plane = intersectPlane(rayOrigin, rayDir, u_planeY);
     if (t_plane > EPSILON && (closestHit.t < 0.0 || t_plane < closestHit.t)) {

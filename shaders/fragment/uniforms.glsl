@@ -38,6 +38,22 @@ uniform float u_quadReflectivity[MAX_QUADS];
 uniform float u_quadIOR[MAX_QUADS];
 uniform int u_quadMaterialTypes[MAX_QUADS];
 
+// Triangle Data Uniforms
+const int MAX_TRIANGLES = 20;
+uniform int u_triangleCount;
+uniform vec3 u_triangleV0[MAX_TRIANGLES];
+uniform vec3 u_triangleE1[MAX_TRIANGLES];
+uniform vec3 u_triangleE2[MAX_TRIANGLES];
+uniform vec3 u_triangleNormals[MAX_TRIANGLES];
+uniform vec3 u_triangleAABB_min[MAX_TRIANGLES];
+uniform vec3 u_triangleAABB_max[MAX_TRIANGLES];
+
+// Material Uniforms for Triangles
+uniform vec3 u_triangleDiffuseColors[MAX_TRIANGLES];
+uniform float u_triangleReflectivity[MAX_TRIANGLES];
+uniform float u_triangleIOR[MAX_TRIANGLES];
+uniform int u_triangleMaterialTypes[MAX_TRIANGLES];
+
 // CAMERA UNIFORMS
 uniform vec3 u_cameraPos;
 uniform vec2 u_cameraRotation;
@@ -50,7 +66,7 @@ const vec3 SKY_ZENITH_COLOR = vec3(0.1, 0.4, 0.7);
 const vec3 LIGHT_EMISSION = vec3(5.0, 5.0, 4.0);
 const float AMBIENT_INTENSITY = 0.15;
 const float EPSILON = 0.001;
-const int MAX_BOUNCES = 5;
+const int MAX_BOUNCES = 10;
 const int SAMPLES_PER_PIXEL = 10;
 
 // Material Types (as defined in JS)
@@ -59,4 +75,4 @@ const int REFLECTIVE = 1;
 const int REFRACTIVE = 2;
 
 // Object IDs
-const int PLANE_ID = MAX_SPHERES + MAX_QUADS;
+const int PLANE_ID = MAX_SPHERES + MAX_QUADS + MAX_TRIANGLES;
