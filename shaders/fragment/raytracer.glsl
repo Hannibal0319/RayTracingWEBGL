@@ -7,16 +7,15 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
     vec3 totalWeight = vec3(1.0);
 
     for (int bounce = 0; bounce < MAX_BOUNCES; ++bounce) {
-        float t_light = intersectSphere(currentRayOrigin, currentRayDir, u_lightSphereCenter, u_lightSphereRadius);
-        if (t_light > EPSILON) {
-            accumulatedColor += totalWeight * LIGHT_EMISSION;
-            break;
-        }
-
         HitRecord hit = findClosestHit(currentRayOrigin, currentRayDir);
 
         if (hit.t < 0.0) {
             accumulatedColor += totalWeight * getSkyColor(currentRayDir);
+            break;
+        }
+
+        if (hit.material.materialType == EMISSIVE) {
+            accumulatedColor += totalWeight * hit.material.emissiveColor;
             break;
         }
 

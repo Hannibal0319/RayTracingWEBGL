@@ -28,10 +28,6 @@ function render() {
     const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
 
-    // LIGHT SPHERE UNIFORMS
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_lightSphereCenter'), SCENE_DATA.lightSphereCenter);
-    gl.uniform1f(gl.getUniformLocation(program, 'u_lightSphereRadius'), SCENE_DATA.lightSphereRadius);
-    
     // Ground Plane Uniforms
     gl.uniform1f(gl.getUniformLocation(program, 'u_planeY'), SCENE_DATA.planeY);
     gl.uniform3fv(gl.getUniformLocation(program, 'u_planeColorA'), SCENE_DATA.planeColorA);
@@ -55,6 +51,7 @@ function render() {
     const sphereReflectivity = SCENE_DATA.spheres.map(s => s.material.reflectivity);
     const sphereIOR = SCENE_DATA.spheres.map(s => s.material.ior);
     const sphereMaterialTypes = SCENE_DATA.spheres.map(s => s.material.materialType);
+    const sphereEmissionColors = SCENE_DATA.spheres.map(s => s.material.emissiveColor).flat();
 
     // Set sphere uniforms
     gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereCenters'), sphereCenters);
@@ -65,6 +62,7 @@ function render() {
     gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereReflectivity'), sphereReflectivity);
     gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereIOR'), sphereIOR);
     gl.uniform1iv(gl.getUniformLocation(program, 'u_sphereMaterialTypes'), sphereMaterialTypes);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereEmissionColors'), sphereEmissionColors);
 
     // Pass number of quads
     gl.uniform1i(gl.getUniformLocation(program, 'u_quadCount'), SCENE_DATA.quads.length);
@@ -81,6 +79,7 @@ function render() {
         const quadReflectivity = SCENE_DATA.quads.map(q => q.material.reflectivity);
         const quadIOR = SCENE_DATA.quads.map(q => q.material.ior);
         const quadMaterialTypes = SCENE_DATA.quads.map(q => q.material.materialType);
+        const quadEmissionColors = SCENE_DATA.quads.map(q => q.material.emissiveColor).flat();
 
         // Set quad uniforms
         gl.uniform3fv(gl.getUniformLocation(program, 'u_quadCorners'), quadCorners);
@@ -93,6 +92,7 @@ function render() {
         gl.uniform1fv(gl.getUniformLocation(program, 'u_quadReflectivity'), quadReflectivity);
         gl.uniform1fv(gl.getUniformLocation(program, 'u_quadIOR'), quadIOR);
         gl.uniform1iv(gl.getUniformLocation(program, 'u_quadMaterialTypes'), quadMaterialTypes);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_quadEmissionColors'), quadEmissionColors);
     }
 
     // Triangles
@@ -108,6 +108,7 @@ function render() {
         const triReflectivity = SCENE_DATA.triangles.map(t => t.material.reflectivity);
         const triIOR = SCENE_DATA.triangles.map(t => t.material.ior);
         const triMaterialTypes = SCENE_DATA.triangles.map(t => t.material.materialType);
+        const triEmissionColors = SCENE_DATA.triangles.map(t => t.material.emissiveColor).flat();
 
         gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleV0'), triV0);
         gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleE1'), triE1);
@@ -119,6 +120,7 @@ function render() {
         gl.uniform1fv(gl.getUniformLocation(program, 'u_triangleReflectivity'), triReflectivity);
         gl.uniform1fv(gl.getUniformLocation(program, 'u_triangleIOR'), triIOR);
         gl.uniform1iv(gl.getUniformLocation(program, 'u_triangleMaterialTypes'), triMaterialTypes);
+        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleEmissionColors'), triEmissionColors);
     }
 
     // 3. Draw the Quad

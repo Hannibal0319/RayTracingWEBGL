@@ -9,12 +9,10 @@ const M_GOLD = new Material([1.0, 0.71, 0.29], 0.7, 0.47, REFLECTIVE);
 const M_SILVER = new Material([0.6, 0.6, 0.6], 0.7, 0.14, REFLECTIVE);
 const M_WATER = new Material([0.8, 0.9, 1.0], 0.7, 1.33, REFRACTIVE);
 const M_WOOD = new Material([0.4, 0.2, 0.1], 0.1, 1.0, LAMBERTIAN);
+const M_LIGHT_SOFT = new Material([1.0, 0.95, 0.9], 0.0, 1.0, EMISSIVE, [8.0, 7.5, 6.5]);
 
 // Scene Data
 const SCENE_DATA = {
-    lightSphereCenter: [-1.5, 3.0, -4.0],
-    lightSphereRadius: 0.5,
-    
     spheres: [
         new Sphere([-2.0, -0.2, -5.0], 0.8, new Material([0.1, 0.3, 0.2], 0.9, 1.5, REFRACTIVE)),
         
@@ -23,17 +21,20 @@ const SCENE_DATA = {
         new Sphere([3.0, -0.4, -7.0], 0.6, new Material([0.8, 0.1, 0.1], 0.0, 1.0, LAMBERTIAN)),
 
         new Sphere([0.0, 0.0, -7.0], 0.7, M_SILVER),
+
+        // New emissive sphere light (soft, warm glow)
+        new Sphere([-1.0, 1.8, -4.5], 0.4, M_GOLD),
     ],
 
     quads: [
         new Quad([1.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], M_GOLD),
-        new Quad([3.5, -0.5, -4.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], M_SILVER),
+        new Quad([3.5, -0.5, -4.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], M_LIGHT_SOFT),
 
     ],
 
     triangles: [
         new Triangle([-2.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], new Material([0.2, 0.6, 0.9], 0.05, 1.0, LAMBERTIAN)),
-        new Triangle([4.0, -0.5, -6.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], new Material([0.9, 0.4, 0.2], 0.2, 1.0, LAMBERTIAN))
+        new Triangle([4.0, -0.5, -6.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], new Material([0.9, 0.4, 0.2], 0.2, 1.0, LAMBERTIAN)),
     ],
     
     planeY: -1.0, 

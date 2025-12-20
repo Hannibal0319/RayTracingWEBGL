@@ -5,6 +5,7 @@ struct Material {
     float reflectivity;
     float ior;
     int materialType;
+    vec3 emissiveColor;
 };
 
 struct HitRecord {

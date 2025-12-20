@@ -2,13 +2,15 @@
 const LAMBERTIAN = 0;
 const REFLECTIVE = 1;
 const REFRACTIVE = 2;
+const EMISSIVE = 3;
 
 class Material {
-    constructor(diffuseColor, reflectivity, ior, materialType) {
+    constructor(diffuseColor, reflectivity, ior, materialType, emissiveColor = [0, 0, 0]) {
         this.diffuseColor = diffuseColor;
         this.reflectivity = reflectivity;
         this.ior = ior;
         this.materialType = materialType;
+        this.emissiveColor = emissiveColor;
     }
 }
 

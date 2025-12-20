@@ -17,6 +17,7 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
             closestHit.material.reflectivity = u_sphereReflectivity[i];
             closestHit.material.ior = u_sphereIOR[i];
             closestHit.material.materialType = u_sphereMaterialTypes[i];
+            closestHit.material.emissiveColor = u_sphereEmissionColors[i];
         }
     }
 
@@ -37,6 +38,7 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
             closestHit.material.reflectivity = u_quadReflectivity[i];
             closestHit.material.ior = u_quadIOR[i];
             closestHit.material.materialType = u_quadMaterialTypes[i];
+            closestHit.material.emissiveColor = u_quadEmissionColors[i];
         }
     }
 
@@ -57,6 +59,7 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
             closestHit.material.reflectivity = u_triangleReflectivity[i];
             closestHit.material.ior = u_triangleIOR[i];
             closestHit.material.materialType = u_triangleMaterialTypes[i];
+            closestHit.material.emissiveColor = u_triangleEmissionColors[i];
         }
     }
 
@@ -70,6 +73,7 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
         closestHit.material.reflectivity = 0.0;
         closestHit.material.ior = 1.0;
         closestHit.material.materialType = LAMBERTIAN;
+        closestHit.material.emissiveColor = vec3(0.0);
 
         float checkSize = 1.0;
         vec2 coords = hitPoint.xz / checkSize;
@@ -84,12 +88,6 @@ vec3 getSkyColor(vec3 rayDir) {
     float skyFactor = max(0.0, rayDir.y);
     vec3 missedColor = mix(SKY_HORIZON_COLOR, SKY_ZENITH_COLOR, skyFactor);
 
-    vec3 lightPosNormalized = normalize(u_lightSphereCenter);
-    float illuminationFactor = max(0.0, dot(-rayDir, lightPosNormalized));
-    float scatter = pow(illuminationFactor, 5.0) * 0.5;
-    float glow = pow(illuminationFactor, 25.0) * 1.0;
-
-    missedColor = mix(missedColor, LIGHT_EMISSION * 0.3, scatter);
-    missedColor = mix(missedColor, LIGHT_EMISSION * 1.0, glow);
+    // No directional sun; simple sky gradient
     return missedColor;
 }
