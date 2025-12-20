@@ -47,9 +47,7 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
         } else if (hit.material.materialType == REFLECTIVE) {
             nextRayDir = reflect(currentRayDir, hit.normal);
         } else { // Lambertian
-            // For a purely lambertian surface, we would ideally do diffuse reflection.
-            // For this simplified model, we'll just stop bouncing for non-reflective/refractive surfaces.
-            break;
+            nextRayDir = cosineSampleHemisphere(hit.normal);
         }
         
         currentRayDir = nextRayDir;

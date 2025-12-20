@@ -66,8 +66,9 @@ const vec3 SKY_ZENITH_COLOR = vec3(0.1, 0.4, 0.7);
 const vec3 LIGHT_EMISSION = vec3(5.0, 5.0, 4.0);
 const float AMBIENT_INTENSITY = 0.15;
 const float EPSILON = 0.001;
-const int MAX_BOUNCES = 10;
+const int MAX_BOUNCES = 5;
 const int SAMPLES_PER_PIXEL = 10;
+const float PI = 3.14159265359;
 
 // Material Types (as defined in JS)
 const int LAMBERTIAN = 0;
