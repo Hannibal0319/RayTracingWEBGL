@@ -3,11 +3,21 @@
  */
 function setupWebGL() {
     canvas = document.getElementById('rayTraceCanvas');
-    // Try to get the WebGL 2.0 context first, fall back to WebGL 1.0
-    gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    // Require WebGL2 for float textures used by triangle data
+    gl = canvas.getContext('webgl2', { antialias: false });
+
+    const glVersionEl = document.getElementById('gl-version');
+    if (glVersionEl) {
+        if (gl) {
+            const type = gl instanceof WebGL2RenderingContext ? 'WebGL 2' : 'WebGL 1';
+            glVersionEl.textContent = `Running ${type}`;
+        } else {
+            glVersionEl.textContent = 'WebGL 2 required but not available';
+        }
+    }
 
     if (!gl) {
-        console.error("Unable to initialize WebGL. Your browser may not support it.");
+        console.error("Unable to initialize WebGL2. Your browser may not support it.");
         return;
     }
     program = initShaders(gl, 'shaders/vertex-shader.glsl', 'shaders/fragment-shader.glsl');

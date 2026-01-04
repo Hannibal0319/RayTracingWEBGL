@@ -1,4 +1,4 @@
-precision highp float;
+precision mediump float;
 
 // Scene Uniforms
 uniform vec2 u_resolution;
@@ -38,36 +38,47 @@ uniform float u_quadIOR[MAX_QUADS];
 uniform int u_quadMaterialTypes[MAX_QUADS];
 uniform vec3 u_quadEmissionColors[MAX_QUADS];
 
-// Triangle Data Uniforms
-const int MAX_TRIANGLES = 20;
+// Triangle Data via texture
+const int MAX_TRIANGLES = 20000;
 uniform int u_triangleCount;
-uniform vec3 u_triangleV0[MAX_TRIANGLES];
-uniform vec3 u_triangleE1[MAX_TRIANGLES];
-uniform vec3 u_triangleE2[MAX_TRIANGLES];
-uniform vec3 u_triangleNormals[MAX_TRIANGLES];
-uniform vec3 u_triangleAABB_min[MAX_TRIANGLES];
-uniform vec3 u_triangleAABB_max[MAX_TRIANGLES];
+uniform highp sampler2D u_triTex;
+uniform vec2 u_triTexSize; // width = triangleCount, height = rows (6)
 
-// Material Uniforms for Triangles
-uniform vec3 u_triangleDiffuseColors[MAX_TRIANGLES];
-uniform float u_triangleReflectivity[MAX_TRIANGLES];
-uniform float u_triangleIOR[MAX_TRIANGLES];
-uniform int u_triangleMaterialTypes[MAX_TRIANGLES];
-uniform vec3 u_triangleEmissionColors[MAX_TRIANGLES];
+// Blue-noise texture for RNG
+uniform highp sampler2D u_noiseTex;
+uniform vec2 u_noiseTexSize;
+
+// BVH Data
+uniform int u_bvhNodeCount;
+uniform highp sampler2D u_bvhTex0;
+uniform highp sampler2D u_bvhTex1;
+uniform highp sampler2D u_bvhTex2;
+uniform vec2 u_bvhTexSize; // width = nodeCount, height = 1
+const int MAX_BVH_NODES = 35536;
+uniform vec3 u_meshBoundsMin;
+uniform vec3 u_meshBoundsMax;
+
+// Point light (sky)
+uniform vec3 u_pointLightPos;
+uniform vec3 u_pointLightColor; // includes intensity
 
 // CAMERA UNIFORMS
 uniform vec3 u_cameraPos;
-uniform vec2 u_cameraRotation;
+uniform vec2 u_cameraRotation; // yaw (x), pitch (y)
+uniform mat3 u_cameraRotationMat; // precomputed rotation matrix
+uniform vec3 u_cameraRight;
+uniform vec3 u_cameraUp;
 uniform float u_aperture;
 uniform float u_focalDistance;
+uniform float u_fov;
 
 // Constants
 const vec3 SKY_HORIZON_COLOR = vec3(0.9, 0.95, 1.0);
 const vec3 SKY_ZENITH_COLOR = vec3(0.05, 0.2, 0.4);
-const float AMBIENT_INTENSITY = 0.05;
+const float AMBIENT_INTENSITY = 0.1;
 const float EPSILON = 0.001;
-const int MAX_BOUNCES = 5;
-const int SAMPLES_PER_PIXEL = 10;
+const int MAX_BOUNCES = 4;
+const int SAMPLES_PER_PIXEL = 8;
 const float PI = 3.14159265359;
 
 // Material Types (as defined in JS)

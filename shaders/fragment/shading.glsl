@@ -1,5 +1,15 @@
 // --- Shading Functions ---
 
+void getTriangleData(int idx, out vec3 v0, out vec3 e1, out vec3 e2, out vec3 diffuse, out vec3 emission, out int matType) {
+    v0 = triTexFetch(idx, 0);
+    e1 = triTexFetch(idx, 1);
+    e2 = triTexFetch(idx, 2);
+    diffuse = triTexFetch(idx, 3);
+    vec3 info = triTexFetch(idx, 4);
+    matType = int(info.b + 0.5);
+    emission = triTexFetch(idx, 5);
+}
+
 // Accumulate direct lighting from emissive spheres with simple point-sphere attenuation and visibility.
 vec3 accumulateEmissiveLights(vec3 hitPoint, vec3 N, int hitObjectID) {
     vec3 result = vec3(0.0);
@@ -42,12 +52,7 @@ vec3 accumulateEmissiveLights(vec3 hitPoint, vec3 N, int hitObjectID) {
         }
         // triangles
         if (!blocked) {
-            for (int tIdx = 0; tIdx < MAX_TRIANGLES; ++tIdx) {
-                if (tIdx >= u_triangleCount) break;
-                if (u_triangleMaterialTypes[tIdx] == EMISSIVE) continue;
-                float t = intersectTriangle(shadowOrigin, L, u_triangleV0[tIdx], u_triangleE1[tIdx], u_triangleE2[tIdx]);
-                if (t > EPSILON && t < maxT) { blocked = true; break; }
-            }
+            blocked = bvhAnyHit(shadowOrigin, L, maxT, true, -1);
         }
 
         if (blocked) continue;
@@ -101,12 +106,7 @@ vec3 accumulateEmissiveLights(vec3 hitPoint, vec3 N, int hitObjectID) {
             }
             // triangles
             if (!blocked) {
-                for (int tIdx = 0; tIdx < MAX_TRIANGLES; ++tIdx) {
-                    if (tIdx >= u_triangleCount) break;
-                    if (u_triangleMaterialTypes[tIdx] == EMISSIVE) continue;
-                    float t = intersectTriangle(shadowOrigin, L, u_triangleV0[tIdx], u_triangleE1[tIdx], u_triangleE2[tIdx]);
-                    if (t > EPSILON && t < maxT) { blocked = true; break; }
-                }
+                blocked = bvhAnyHit(shadowOrigin, L, maxT, true, -1);
             }
 
             if (blocked) continue;
@@ -118,11 +118,13 @@ vec3 accumulateEmissiveLights(vec3 hitPoint, vec3 N, int hitObjectID) {
     // Triangle emitters (sample at triangle centroid, two-sided)
     for (int i = 0; i < MAX_TRIANGLES; ++i) {
         if (i >= u_triangleCount) break;
-        if (u_triangleMaterialTypes[i] != EMISSIVE) continue;
+        vec3 v0, e1, e2, diff, emit; int mType;
+        getTriangleData(i, v0, e1, e2, diff, emit, mType);
+        if (mType != EMISSIVE) continue;
         int triObjectID = i + u_sphereCount + u_quadCount;
         if (triObjectID == hitObjectID) continue;
 
-        vec3 triCenter = u_triangleV0[i] + 0.5 * u_triangleE1[i] + 0.5 * u_triangleE2[i];
+        vec3 triCenter = v0 + 0.5 * e1 + 0.5 * e2;
         vec3 lightVec = triCenter - hitPoint;
         float distSq = dot(lightVec, lightVec);
         float dist = sqrt(distSq);
@@ -153,19 +155,13 @@ vec3 accumulateEmissiveLights(vec3 hitPoint, vec3 N, int hitObjectID) {
         }
         // triangles
         if (!blocked) {
-            for (int tIdx = 0; tIdx < MAX_TRIANGLES; ++tIdx) {
-                if (tIdx >= u_triangleCount) break;
-                if (tIdx == i) continue; // allow hitting the light itself
-                if (u_triangleMaterialTypes[tIdx] == EMISSIVE) continue;
-                float t = intersectTriangle(shadowOrigin, L, u_triangleV0[tIdx], u_triangleE1[tIdx], u_triangleE2[tIdx]);
-                if (t > EPSILON && t < maxT) { blocked = true; break; }
-            }
+            blocked = bvhAnyHit(shadowOrigin, L, maxT, true, i);
         }
 
         if (blocked) continue;
 
         float attenuation = 1.0 / max(1.0, distSq);
-        result += u_triangleEmissionColors[i] * ndotl * attenuation;
+        result += emit * ndotl * attenuation;
     }
 
     return result;
@@ -187,23 +183,33 @@ vec3 shade(HitRecord hit, vec3 rayOrigin, vec3 rayDir) {
     bool isPlane = hit.objectID == PLANE_ID;
     bool isSphere = hit.objectID < sphereEnd;
 
+    // Simple ambient only (direct lighting disabled). Keep ambient independent of albedo so we don't double-multiply and darken objects.
     vec3 ambientColor = vec3(AMBIENT_INTENSITY);
     if (isPlane) {
         ambientColor = mix(vec3(AMBIENT_INTENSITY * 0.5), SKY_HORIZON_COLOR * 0.7, 0.9);
-    } 
-    else if (isQuad || isTriangle) {
-        // Polygonal surfaces get standard ambient
-        ambientColor = hit.material.diffuseColor * AMBIENT_INTENSITY;
-    }
-    else if (isSphere) {
-        // Spheres get standard ambient
-        ambientColor = hit.material.diffuseColor * AMBIENT_INTENSITY;
     }
 
     // Give polygonal surfaces a tiny emissive lift to stay visible when nearly edge-on
     vec3 emissiveBoost = (isQuad || isTriangle) ? hit.material.diffuseColor * 0.05 : vec3(0.0);
 
-    vec3 emissiveLighting = accumulateEmissiveLights(rayOrigin + rayDir * hit.t, N, hit.objectID);
+    vec3 hitPoint = rayOrigin + rayDir * hit.t;
+    vec3 emissiveLighting = accumulateEmissiveLights(hitPoint, N, hit.objectID);
 
-    return hit.material.diffuseColor * ambientColor + emissiveLighting + emissiveBoost;
+    // Sky point light (shadowed)
+    vec3 Lp = u_pointLightPos - hitPoint;
+    float distSq = dot(Lp, Lp);
+    float dist = sqrt(distSq);
+    vec3 Ldir = Lp / dist;
+    float ndotl = max(0.0, dot(N, Ldir));
+    vec3 pointLight = vec3(0.0);
+    if (ndotl > 0.0) {
+        vec3 shadowOrigin = hitPoint + N * EPSILON * 4.0;
+        bool blocked = bvhAnyHit(shadowOrigin, Ldir, dist, true, -1);
+        if (!blocked) {
+            float attenuation = 1.0 / max(1.0, distSq);
+            pointLight = u_pointLightColor * ndotl * attenuation;
+        }
+    }
+
+    return hit.material.diffuseColor * ambientColor + emissiveBoost + emissiveLighting + pointLight;
 }

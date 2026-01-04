@@ -1,12 +1,33 @@
 /**
  * Renders the scene.
  */
+const renderScale = typeof RENDER_SCALE !== 'undefined' ? RENDER_SCALE : 1.0;
+
+function computeCameraRotationMatrix(rotation) {
+    const yaw = rotation[0];
+    const pitch = rotation[1];
+
+    const cy = Math.cos(yaw);
+    const sy = Math.sin(yaw);
+    const cx = Math.cos(pitch);
+    const sx = Math.sin(pitch);
+
+    // Column-major mat3 for R = Ry * Rx
+    return new Float32Array([
+        cy,      0,   -sy,
+        sy * sx, cx,  cy * sx,
+        sy * cx, -sx, cy * cx
+    ]);
+}
+
 function render() {
     if (!gl || !program) return;
 
+    ensureNoiseTexture();
+
     // Handle Canvas Resizing
-    const displayWidth = canvas.clientWidth;
-    const displayHeight = canvas.clientHeight;
+    const displayWidth = Math.max(1, Math.floor(canvas.clientWidth * renderScale));
+    const displayHeight = Math.max(1, Math.floor(canvas.clientHeight * renderScale));
 
     if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
         canvas.width = displayWidth;
@@ -36,6 +57,18 @@ function render() {
     // Camera Uniforms
     gl.uniform3fv(gl.getUniformLocation(program, 'u_cameraPos'), SCENE_DATA.cameraPos);
     gl.uniform2fv(gl.getUniformLocation(program, 'u_cameraRotation'), SCENE_DATA.cameraRotation);
+    const camMat = computeCameraRotationMatrix(SCENE_DATA.cameraRotation);
+    gl.uniformMatrix3fv(
+        gl.getUniformLocation(program, 'u_cameraRotationMat'),
+        false,
+        camMat
+    );
+    // Camera basis vectors
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_cameraRight'), [camMat[0], camMat[1], camMat[2]]);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_cameraUp'),    [camMat[3], camMat[4], camMat[5]]);
+    gl.uniform1f(gl.getUniformLocation(program, 'u_fov'), SCENE_DATA.fov);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_meshBoundsMin'), meshBoundsMin);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_meshBoundsMax'), meshBoundsMax);
     gl.uniform1f(gl.getUniformLocation(program, 'u_aperture'), SCENE_DATA.aperture);
     gl.uniform1f(gl.getUniformLocation(program, 'u_focalDistance'), SCENE_DATA.focalDistance);
 
@@ -95,33 +128,35 @@ function render() {
         gl.uniform3fv(gl.getUniformLocation(program, 'u_quadEmissionColors'), quadEmissionColors);
     }
 
-    // Triangles
-    gl.uniform1i(gl.getUniformLocation(program, 'u_triangleCount'), SCENE_DATA.triangles.length);
-    if (SCENE_DATA.triangles.length > 0) {
-        const triV0 = SCENE_DATA.triangles.map(t => t.v0).flat();
-        const triE1 = SCENE_DATA.triangles.map(t => t.e1).flat();
-        const triE2 = SCENE_DATA.triangles.map(t => t.e2).flat();
-        const triNormals = SCENE_DATA.triangles.map(t => t.normal).flat();
-        const triAABB_mins = SCENE_DATA.triangles.map(t => t.aabb_min).flat();
-        const triAABB_maxs = SCENE_DATA.triangles.map(t => t.aabb_max).flat();
-        const triDiffuseColors = SCENE_DATA.triangles.map(t => t.material.diffuseColor).flat();
-        const triReflectivity = SCENE_DATA.triangles.map(t => t.material.reflectivity);
-        const triIOR = SCENE_DATA.triangles.map(t => t.material.ior);
-        const triMaterialTypes = SCENE_DATA.triangles.map(t => t.material.materialType);
-        const triEmissionColors = SCENE_DATA.triangles.map(t => t.material.emissiveColor).flat();
+    // Triangles via texture
+    gl.uniform1i(gl.getUniformLocation(program, 'u_triangleCount'), typeof triangleCount !== 'undefined' ? triangleCount : triangleTexSize[0]);
+    gl.uniform2f(gl.getUniformLocation(program, 'u_triTexSize'), triangleTexSize[0], triangleTexSize[1]);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, triangleTexture);
+    gl.uniform1i(gl.getUniformLocation(program, 'u_triTex'), 0);
 
-        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleV0'), triV0);
-        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleE1'), triE1);
-        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleE2'), triE2);
-        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleNormals'), triNormals);
-        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleAABB_min'), triAABB_mins);
-        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleAABB_max'), triAABB_maxs);
-        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleDiffuseColors'), triDiffuseColors);
-        gl.uniform1fv(gl.getUniformLocation(program, 'u_triangleReflectivity'), triReflectivity);
-        gl.uniform1fv(gl.getUniformLocation(program, 'u_triangleIOR'), triIOR);
-        gl.uniform1iv(gl.getUniformLocation(program, 'u_triangleMaterialTypes'), triMaterialTypes);
-        gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleEmissionColors'), triEmissionColors);
-    }
+    // Blue noise texture
+    gl.uniform2f(gl.getUniformLocation(program, 'u_noiseTexSize'), noiseTexSize[0], noiseTexSize[1]);
+    gl.activeTexture(gl.TEXTURE4);
+    gl.bindTexture(gl.TEXTURE_2D, noiseTexture);
+    gl.uniform1i(gl.getUniformLocation(program, 'u_noiseTex'), 4);
+
+    // BVH node textures
+    gl.uniform1i(gl.getUniformLocation(program, 'u_bvhNodeCount'), typeof bvhNodeCount !== 'undefined' ? bvhNodeCount : bvhTexSize[0]);
+    gl.uniform2f(gl.getUniformLocation(program, 'u_bvhTexSize'), bvhTexSize[0], bvhTexSize[1]);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, bvhTex0);
+    gl.uniform1i(gl.getUniformLocation(program, 'u_bvhTex0'), 1);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, bvhTex1);
+    gl.uniform1i(gl.getUniformLocation(program, 'u_bvhTex1'), 2);
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, bvhTex2);
+    gl.uniform1i(gl.getUniformLocation(program, 'u_bvhTex2'), 3);
+
+    // Point light
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_pointLightPos'), SCENE_DATA.pointLight.pos);
+    gl.uniform3fv(gl.getUniformLocation(program, 'u_pointLightColor'), SCENE_DATA.pointLight.color);
 
     // 3. Draw the Quad
     gl.drawArrays(gl.TRIANGLES, 0, 6); // Draw 6 vertices (2 triangles)

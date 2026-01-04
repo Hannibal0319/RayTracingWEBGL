@@ -1,7 +1,18 @@
 // --- Utility Functions ---
 
+// Fast integer hash-based RNG to avoid trig in the fragment path
+uint hash2(uvec2 v) {
+    v = v * 1664525u + 1013904223u;
+    v ^= v.yx << 5;
+    v ^= v.yx >> 3;
+    v *= 0x27d4eb2du;
+    return v.x ^ v.y;
+}
+
 float random(vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+    // Use tiled blue-noise texture (fast, well-distributed noise)
+    vec2 uv = fract(st * (1.0 / u_noiseTexSize));
+    return texture2D(u_noiseTex, uv).r;
 }
 
 mat3 rotateX(float angle) {

@@ -67,5 +67,19 @@ class Triangle {
 
         this.normal = cross(this.e1, this.e2);
         normalize(this.normal, this.normal);
+
+        // Precompute AABB for upload to the shader
+        const v1 = add(this.v0, this.e1);
+        const v2 = add(this.v0, this.e2);
+        this.aabb_min = [
+            Math.min(this.v0[0], v1[0], v2[0]),
+            Math.min(this.v0[1], v1[1], v2[1]),
+            Math.min(this.v0[2], v1[2], v2[2])
+        ];
+        this.aabb_max = [
+            Math.max(this.v0[0], v1[0], v2[0]),
+            Math.max(this.v0[1], v1[1], v2[1]),
+            Math.max(this.v0[2], v1[2], v2[2])
+        ];
     }
 }

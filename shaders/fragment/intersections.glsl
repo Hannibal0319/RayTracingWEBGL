@@ -1,12 +1,32 @@
 // --- Intersection Functions ---
 
+vec3 makeSafeDir(vec3 d) {
+    return vec3(
+        (d.x > 0.0) ? max(d.x, 1e-6) : min(d.x, -1e-6),
+        (d.y > 0.0) ? max(d.y, 1e-6) : min(d.y, -1e-6),
+        (d.z > 0.0) ? max(d.z, 1e-6) : min(d.z, -1e-6)
+    );
+}
+
 bool intersectAABB(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax) {
-    vec3 tMin = (boxMin - rayOrigin) / rayDir;
-    vec3 tMax = (boxMax - rayOrigin) / rayDir;
+    vec3 invRayDir = 1.0 / makeSafeDir(rayDir);
+    vec3 tMin = (boxMin - rayOrigin) * invRayDir;
+    vec3 tMax = (boxMax - rayOrigin) * invRayDir;
     vec3 t1 = min(tMin, tMax);
     vec3 t2 = max(tMin, tMax);
     float tNear = max(max(t1.x, t1.y), t1.z);
     float tFar = min(min(t2.x, t2.y), t2.z);
+    return tNear < tFar && tFar > 0.0;
+}
+
+bool intersectAABBWithT(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax, out float tNear, out float tFar) {
+    vec3 invRayDir = 1.0 / makeSafeDir(rayDir);
+    vec3 tMin = (boxMin - rayOrigin) * invRayDir;
+    vec3 tMax = (boxMax - rayOrigin) * invRayDir;
+    vec3 t1 = min(tMin, tMax);
+    vec3 t2 = max(tMin, tMax);
+    tNear = max(max(t1.x, t1.y), t1.z);
+    tFar = min(min(t2.x, t2.y), t2.z);
     return tNear < tFar && tFar > 0.0;
 }
 
