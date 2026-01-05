@@ -21,11 +21,23 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
 
         vec3 hitPoint = currentRayOrigin + currentRayDir * hit.t;
         vec3 localColor = shade(hit, currentRayOrigin, currentRayDir);
-        accumulatedColor += totalWeight * localColor * (1.0 - hit.material.reflectivity);
+        
+        // Calculate effective reflectivity
+        float effectiveReflectivity = hit.material.reflectivity;
+        if (hit.material.materialType == METALLIC_ROUGHNESS) {
+            effectiveReflectivity = 1.0;
+        }
+        
+        accumulatedColor += totalWeight * localColor * (1.0 - effectiveReflectivity);
         
         // For reflective materials, tint the totalWeight by the material color
         if (hit.material.materialType == REFLECTIVE) {
             totalWeight *= hit.material.reflectivity * hit.material.diffuseColor;
+        } else if (hit.material.materialType == METALLIC_ROUGHNESS) {
+            // For metallic materials, use Fresnel-based weighting
+            vec3 F0 = mix(vec3(0.04), hit.material.diffuseColor, hit.material.metallic);
+            vec3 F = fresnelSchlick(max(dot(hit.normal, -currentRayDir), 0.0), F0);
+            totalWeight *= F;
         } else {
             totalWeight *= hit.material.reflectivity;
         }
@@ -45,6 +57,20 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
             nextRayDir = length(refractedDir) < EPSILON ? reflect(currentRayDir, N) : refractedDir;
         } else if (hit.material.materialType == REFLECTIVE) {
             nextRayDir = reflect(currentRayDir, hit.normal);
+        } else if (hit.material.materialType == METALLIC_ROUGHNESS) {
+            vec3 V = -currentRayDir; // View direction
+            vec3 N = hit.normal;
+            
+            // Importance sample GGX for specular reflection
+            vec2 Xi = vec2(random(gl_FragCoord.xy + vec2(float(bounce), 0.0)), 
+                          random(gl_FragCoord.xy + vec2(float(bounce), 1.0)));
+            vec3 H = importanceSampleGGX(Xi, N, hit.material.roughness);
+            nextRayDir = reflect(currentRayDir, H);
+            
+            // Ensure the ray is in the correct hemisphere
+            if (dot(nextRayDir, N) < 0.0) {
+                nextRayDir = reflect(nextRayDir, N);
+            }
         } else { // Lambertian
             nextRayDir = cosineSampleHemisphere(hit.normal);
         }

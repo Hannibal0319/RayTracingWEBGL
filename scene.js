@@ -3,14 +3,17 @@ const LAMBERTIAN = 0;
 const REFLECTIVE = 1;
 const REFRACTIVE = 2;
 const EMISSIVE = 3;
+const METALLIC_ROUGHNESS = 4;
 
 class Material {
-    constructor(diffuseColor, reflectivity, ior, materialType, emissiveColor = [0, 0, 0]) {
+    constructor(diffuseColor, reflectivity, ior, materialType, emissiveColor = [0, 0, 0], metallic = 0.0, roughness = 0.5) {
         this.diffuseColor = diffuseColor;
         this.reflectivity = reflectivity;
         this.ior = ior;
         this.materialType = materialType;
         this.emissiveColor = emissiveColor;
+        this.metallic = metallic;
+        this.roughness = roughness;
     }
 }
 

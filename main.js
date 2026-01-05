@@ -10,20 +10,23 @@ const M_SILVER = new Material([0.6, 0.6, 0.6], 0.7, 0.14, REFLECTIVE);
 const M_WATER = new Material([0.8, 0.9, 1.0], 0.7, 1.33, REFRACTIVE);
 const M_WOOD = new Material([0.4, 0.2, 0.1], 0.1, 1.0, LAMBERTIAN);
 const M_LIGHT_SOFT = new Material([1.0, 0.95, 0.9], 0.0, 1.0, EMISSIVE, [8.0, 7.5, 6.5]);
+const M_METAL_ROUGH = new Material([0.8, 0.8, 0.8], 0.0, 1.0, METALLIC_ROUGHNESS, [0, 0, 0], 1.0, 0.3);
+const M_METAL_SMOOTH = new Material([0.9, 0.9, 0.9], 0.0, 1.0, METALLIC_ROUGHNESS, [0, 0, 0], 1.0, 0.1);
+const M_DIELECTRIC_ROUGH = new Material([0.2, 0.8, 0.3], 0.0, 1.0, METALLIC_ROUGHNESS, [0, 0, 0], 0.0, 0.4);
 
 // Scene Data
 const SCENE_DATA = {
     spheres: [
         new Sphere([-2.0, -0.2, -5.0], 0.8, new Material([0.1, 0.3, 0.2], 0.9, 1.5, REFRACTIVE)),
         
-        new Sphere([-7.0, 0.0, -8.0], 1.0, M_GOLD),
+        new Sphere([-7.0, 0.0, -8.0], 1.0, M_METAL_ROUGH),
         
-        new Sphere([3.0, -0.4, -7.0], 0.6, new Material([0.8, 0.1, 0.1], 0.0, 1.0, LAMBERTIAN)),
+        new Sphere([3.0, -0.4, -7.0], 0.6, M_METAL_SMOOTH),
 
-        new Sphere([0.0, 0.0, -7.0], 0.7, M_SILVER),
+        new Sphere([0.0, 0.0, -7.0], 0.7, M_DIELECTRIC_ROUGH),
 
         // New emissive sphere light (soft, warm glow)
-        new Sphere([-1.0, 1.8, -4.5], 0.4, M_GOLD),
+        // new Sphere([-1.0, 1.8, -4.5], 0.4, M_LIGHT_SOFT),
     ],
 
     quads: [

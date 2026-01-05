@@ -175,6 +175,14 @@ vec3 shade(HitRecord hit, vec3 rayOrigin, vec3 rayDir) {
     if (hit.material.materialType == EMISSIVE) {
         return hit.material.emissiveColor;
     }
+    
+    // For reflective, refractive, and metallic materials, no local shading
+    if (hit.material.materialType == REFLECTIVE || 
+        hit.material.materialType == REFRACTIVE || 
+        hit.material.materialType == METALLIC_ROUGHNESS) {
+        return vec3(0.0);
+    }
+    
     // Use a shading normal that faces the incoming ray to avoid black backfaces,
     // while keeping the geometric normal in hit.normal for refraction logic.
     vec3 N = dot(hit.normal, rayDir) > 0.0 ? -hit.normal : hit.normal;

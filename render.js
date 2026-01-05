@@ -52,6 +52,8 @@ function render() {
     const sphereIOR = SCENE_DATA.spheres.map(s => s.material.ior);
     const sphereMaterialTypes = SCENE_DATA.spheres.map(s => s.material.materialType);
     const sphereEmissionColors = SCENE_DATA.spheres.map(s => s.material.emissiveColor).flat();
+    const sphereMetallic = SCENE_DATA.spheres.map(s => s.material.metallic);
+    const sphereRoughness = SCENE_DATA.spheres.map(s => s.material.roughness);
 
     // Set sphere uniforms
     gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereCenters'), sphereCenters);
@@ -63,6 +65,8 @@ function render() {
     gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereIOR'), sphereIOR);
     gl.uniform1iv(gl.getUniformLocation(program, 'u_sphereMaterialTypes'), sphereMaterialTypes);
     gl.uniform3fv(gl.getUniformLocation(program, 'u_sphereEmissionColors'), sphereEmissionColors);
+    gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereMetallic'), sphereMetallic);
+    gl.uniform1fv(gl.getUniformLocation(program, 'u_sphereRoughness'), sphereRoughness);
 
     // Pass number of quads
     gl.uniform1i(gl.getUniformLocation(program, 'u_quadCount'), SCENE_DATA.quads.length);
@@ -80,6 +84,8 @@ function render() {
         const quadIOR = SCENE_DATA.quads.map(q => q.material.ior);
         const quadMaterialTypes = SCENE_DATA.quads.map(q => q.material.materialType);
         const quadEmissionColors = SCENE_DATA.quads.map(q => q.material.emissiveColor).flat();
+        const quadMetallic = SCENE_DATA.quads.map(q => q.material.metallic);
+        const quadRoughness = SCENE_DATA.quads.map(q => q.material.roughness);
 
         // Set quad uniforms
         gl.uniform3fv(gl.getUniformLocation(program, 'u_quadCorners'), quadCorners);
@@ -93,6 +99,8 @@ function render() {
         gl.uniform1fv(gl.getUniformLocation(program, 'u_quadIOR'), quadIOR);
         gl.uniform1iv(gl.getUniformLocation(program, 'u_quadMaterialTypes'), quadMaterialTypes);
         gl.uniform3fv(gl.getUniformLocation(program, 'u_quadEmissionColors'), quadEmissionColors);
+        gl.uniform1fv(gl.getUniformLocation(program, 'u_quadMetallic'), quadMetallic);
+        gl.uniform1fv(gl.getUniformLocation(program, 'u_quadRoughness'), quadRoughness);
     }
 
     // Triangles
@@ -109,6 +117,8 @@ function render() {
         const triIOR = SCENE_DATA.triangles.map(t => t.material.ior);
         const triMaterialTypes = SCENE_DATA.triangles.map(t => t.material.materialType);
         const triEmissionColors = SCENE_DATA.triangles.map(t => t.material.emissiveColor).flat();
+        const triMetallic = SCENE_DATA.triangles.map(t => t.material.metallic);
+        const triRoughness = SCENE_DATA.triangles.map(t => t.material.roughness);
 
         gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleV0'), triV0);
         gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleE1'), triE1);
@@ -121,6 +131,8 @@ function render() {
         gl.uniform1fv(gl.getUniformLocation(program, 'u_triangleIOR'), triIOR);
         gl.uniform1iv(gl.getUniformLocation(program, 'u_triangleMaterialTypes'), triMaterialTypes);
         gl.uniform3fv(gl.getUniformLocation(program, 'u_triangleEmissionColors'), triEmissionColors);
+        gl.uniform1fv(gl.getUniformLocation(program, 'u_triangleMetallic'), triMetallic);
+        gl.uniform1fv(gl.getUniformLocation(program, 'u_triangleRoughness'), triRoughness);
     }
 
     // 3. Draw the Quad

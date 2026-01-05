@@ -18,6 +18,8 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
             closestHit.material.ior = u_sphereIOR[i];
             closestHit.material.materialType = u_sphereMaterialTypes[i];
             closestHit.material.emissiveColor = u_sphereEmissionColors[i];
+            closestHit.material.metallic = u_sphereMetallic[i];
+            closestHit.material.roughness = u_sphereRoughness[i];
         }
     }
 
@@ -39,6 +41,8 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
             closestHit.material.ior = u_quadIOR[i];
             closestHit.material.materialType = u_quadMaterialTypes[i];
             closestHit.material.emissiveColor = u_quadEmissionColors[i];
+            closestHit.material.metallic = u_quadMetallic[i];
+            closestHit.material.roughness = u_quadRoughness[i];
         }
     }
 
@@ -60,6 +64,8 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
             closestHit.material.ior = u_triangleIOR[i];
             closestHit.material.materialType = u_triangleMaterialTypes[i];
             closestHit.material.emissiveColor = u_triangleEmissionColors[i];
+            closestHit.material.metallic = u_triangleMetallic[i];
+            closestHit.material.roughness = u_triangleRoughness[i];
         }
     }
 
