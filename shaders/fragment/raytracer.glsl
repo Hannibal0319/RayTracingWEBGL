@@ -62,8 +62,8 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir, float time) {
             vec3 N = hit.normal;
             
             // Importance sample GGX for specular reflection
-            vec2 Xi = vec2(random(gl_FragCoord.xy + vec2(float(bounce), 0.0)), 
-                          random(gl_FragCoord.xy + vec2(float(bounce), 1.0)));
+            vec2 Xi = vec2(random(gl_FragCoord.xy + vec2(float(bounce), 0.0), u_time), 
+                          random(gl_FragCoord.xy + vec2(float(bounce), 1.0), u_time));
             vec3 H = importanceSampleGGX(Xi, N, hit.material.roughness);
             nextRayDir = reflect(currentRayDir, H);
             

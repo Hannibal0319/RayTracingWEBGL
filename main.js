@@ -13,12 +13,14 @@ const M_WHITE_WALL = new Material([1., 2., 2.], 0.2, 1.0, LAMBERTIAN);
 const M_RED_WALL = new Material([1., 0.5, 0.5], 0.2, 1.0, LAMBERTIAN);
 const M_GREEN_WALL = new Material([0.5, 2., 0.5], 0.2, 1.0, LAMBERTIAN);
 const M_LIGHT_SOFT = new Material([1.0, 0.95, 0.9], 0.0, 1.0, EMISSIVE, [5, 5, 5]);
+const M_ROUGH = new Material([0.8, 0.7, 0.6], 0.3, 1.0, METALLIC_ROUGHNESS, [0, 0, 0], 0.8, 0.9);
 
 // Scene Data
 const SCENE_DATA = {
     spheres: [
         new Sphere([-2.0, .0, -2.0], 1, M_GOLD),
         new Sphere([-2.0, .0, 2.0], 1, M_SILVER),
+        new Sphere([2.0, .0, -2.0], 1, M_ROUGH),
         
         // new Sphere([-7.0, 0.0, -8.0], 1.0, M_GOLD),
         
