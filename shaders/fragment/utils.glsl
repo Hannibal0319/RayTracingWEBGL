@@ -1,7 +1,7 @@
 // --- Utility Functions ---
 
-float random(vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+float random(vec2 st, float time) {
+    return fract(sin(dot(st.xy + time, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
 mat3 rotateX(float angle) {
@@ -16,9 +16,9 @@ mat3 rotateY(float angle) {
     return mat3(c, 0.0, s, 0.0, 1.0, 0.0, -s, 0.0, c);
 }
 
-vec3 cosineSampleHemisphere(vec3 normal) {
-    float u1 = random(gl_FragCoord.xy + vec2(0.1, 0.2));
-    float u2 = random(gl_FragCoord.xy + vec2(0.3, 0.4));
+vec3 cosineSampleHemisphere(vec3 normal, float time) {
+    float u1 = random(gl_FragCoord.xy + vec2(0.1, 0.2), time);
+    float u2 = random(gl_FragCoord.xy + vec2(0.3, 0.4), time + 17.0);
 
     float r = sqrt(u1);
     float theta = 2.0 * PI * u2;

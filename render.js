@@ -12,8 +12,13 @@ function render() {
         canvas.width = displayWidth;
         canvas.height = displayHeight;
         gl.viewport(0, 0, canvas.width, canvas.height);
+        setupFramebufferTexture(canvas.width, canvas.height);
+        frameCount = 0;
     }
 
+    // --- Render to Texture ---
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -24,25 +29,18 @@ function render() {
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
     // 2. Set Uniforms (Scene Data)
-    
     const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
-
-    // Ground Plane Uniforms
+    const timeLocation = gl.getUniformLocation(program, 'u_time');
+    gl.uniform1f(timeLocation, performance.now() * .000001);
     gl.uniform1f(gl.getUniformLocation(program, 'u_planeY'), SCENE_DATA.planeY);
     gl.uniform3fv(gl.getUniformLocation(program, 'u_planeColorA'), SCENE_DATA.planeColorA);
     gl.uniform3fv(gl.getUniformLocation(program, 'u_planeColorB'), SCENE_DATA.planeColorB);
-    
-    // Camera Uniforms
     gl.uniform3fv(gl.getUniformLocation(program, 'u_cameraPos'), SCENE_DATA.cameraPos);
     gl.uniform2fv(gl.getUniformLocation(program, 'u_cameraRotation'), SCENE_DATA.cameraRotation);
     gl.uniform1f(gl.getUniformLocation(program, 'u_aperture'), SCENE_DATA.aperture);
     gl.uniform1f(gl.getUniformLocation(program, 'u_focalDistance'), SCENE_DATA.focalDistance);
-
-    // Pass number of spheres
     gl.uniform1i(gl.getUniformLocation(program, 'u_sphereCount'), SCENE_DATA.spheres.length);
-
-    // Extract data from sphere objects
     const sphereCenters = SCENE_DATA.spheres.map(s => s.center).flat();
     const sphereRadii = SCENE_DATA.spheres.map(s => s.radius);
     const sphereAABB_mins = SCENE_DATA.spheres.map(s => s.aabb_min).flat();
@@ -52,6 +50,7 @@ function render() {
     const sphereIOR = SCENE_DATA.spheres.map(s => s.material.ior);
     const sphereMaterialTypes = SCENE_DATA.spheres.map(s => s.material.materialType);
     const sphereEmissionColors = SCENE_DATA.spheres.map(s => s.material.emissiveColor).flat();
+
     const sphereMetallic = SCENE_DATA.spheres.map(s => s.material.metallic);
     const sphereRoughness = SCENE_DATA.spheres.map(s => s.material.roughness);
 
@@ -70,9 +69,7 @@ function render() {
 
     // Pass number of quads
     gl.uniform1i(gl.getUniformLocation(program, 'u_quadCount'), SCENE_DATA.quads.length);
-
     if (SCENE_DATA.quads.length > 0) {
-        // Extract data from quad objects
         const quadCorners = SCENE_DATA.quads.map(q => q.corner).flat();
         const quadU = SCENE_DATA.quads.map(q => q.u).flat();
         const quadV = SCENE_DATA.quads.map(q => q.v).flat();
@@ -102,8 +99,6 @@ function render() {
         gl.uniform1fv(gl.getUniformLocation(program, 'u_quadMetallic'), quadMetallic);
         gl.uniform1fv(gl.getUniformLocation(program, 'u_quadRoughness'), quadRoughness);
     }
-
-    // Triangles
     gl.uniform1i(gl.getUniformLocation(program, 'u_triangleCount'), SCENE_DATA.triangles.length);
     if (SCENE_DATA.triangles.length > 0) {
         const triV0 = SCENE_DATA.triangles.map(t => t.v0).flat();
@@ -135,12 +130,33 @@ function render() {
         gl.uniform1fv(gl.getUniformLocation(program, 'u_triangleRoughness'), triRoughness);
     }
 
+    // Accumulation uniforms
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, accumTexture);
+    gl.uniform1i(gl.getUniformLocation(program, 'u_accumTexture'), 0);
+    gl.uniform1i(gl.getUniformLocation(program, 'u_frameCount'), frameCount);
+
     // 3. Draw the Quad
     gl.drawArrays(gl.TRIANGLES, 0, 6); // Draw 6 vertices (2 triangles)
+
+    // --- Render Texture to Canvas ---
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    // Copy renderTexture to accumTexture for next frame
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, framebuffer);
+    gl.bindTexture(gl.TEXTURE_2D, accumTexture);
+    gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, canvas.width, canvas.height, 0);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
+    frameCount++;
 }
 
 // FPS Counter state
 let frameCount = 0;
+let fpsFrameCount = 0;
 let lastTime = performance.now();
 const fpsElement = document.getElementById('fps-counter');
 
@@ -148,11 +164,11 @@ const fpsElement = document.getElementById('fps-counter');
 function animate(now) {
     // FPS calculation
     if (fpsElement) {
-        frameCount++;
+        fpsFrameCount++;
         const deltaTime = now - lastTime;
         if (deltaTime >= 1000) {
-            fpsElement.textContent = `FPS: ${frameCount}`;
-            frameCount = 0;
+            fpsElement.textContent = `FPS: ${fpsFrameCount}`;
+            fpsFrameCount = 0;
             lastTime = now;
         }
     }
@@ -160,6 +176,44 @@ function animate(now) {
     render();
     requestAnimationFrame(animate);
 }
+
+var framebuffer = null;
+var renderTexture = null;
+var accumTexture = null;
+
+function setupFramebufferTexture(width, height) {
+    // Create texture
+    renderTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, renderTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    accumTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, accumTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    // Create framebuffer
+    framebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, renderTexture, 0);
+
+    // Unbind for now
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+// --- Render to Texture ---
+gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+gl.viewport(0, 0, canvas.width, canvas.height);
+gl.clearColor(0.0, 0.0, 0.0, 1.0);
+gl.clear(gl.COLOR_BUFFER_BIT);
 
 // NEW: Mouse Interaction Handlers
 function setupMouseControls() {
@@ -175,49 +229,33 @@ function setupMouseControls() {
 
     canvas.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-        
         mouse.x = e.clientX;
         mouse.y = e.clientY;
-
         const deltaX = mouse.x - mouse.lastX;
         const deltaY = mouse.y - mouse.lastY;
-
-        // Yaw (Rotation around Y axis) - controls left/right looking
-        SCENE_DATA.cameraRotation[0] -= deltaX * rotationSpeed; 
-        
-        // Pitch (Rotation around X axis) - controls up/down looking, clamped
+        SCENE_DATA.cameraRotation[0] -= deltaX * rotationSpeed;
         SCENE_DATA.cameraRotation[1] += deltaY * rotationSpeed;
-        // Clamp pitch to prevent camera flipping over
         SCENE_DATA.cameraRotation[1] = Math.max(-1.5, Math.min(1.5, SCENE_DATA.cameraRotation[1]));
-
         mouse.lastX = mouse.x;
         mouse.lastY = mouse.y;
+        resetAccumulation(); // Reset accumulation on camera move
     });
 
     canvas.addEventListener('wheel', (e) => {
-        e.preventDefault(); // Prevent the page from scrolling
-
+        e.preventDefault();
         const zoomSpeed = 0.2;
-        const zoomDirection = e.deltaY < 0 ? 1.0 : -1.0; // Scroll up to zoom in, down to zoom out
-
-        // This is a simple dolly zoom. We move the camera along its forward vector.
+        const zoomDirection = e.deltaY < 0 ? 1.0 : -1.0;
         const yaw = SCENE_DATA.cameraRotation[0];
         const pitch = SCENE_DATA.cameraRotation[1];
-
-        // Calculate the forward vector based on current camera rotation
         const forwardX = Math.sin(yaw) * Math.cos(pitch);
         const forwardY = Math.sin(pitch);
         const forwardZ = -Math.cos(yaw) * Math.cos(pitch);
-        
-        // Update camera position
         SCENE_DATA.cameraPos[0] += forwardX * zoomSpeed * zoomDirection;
         SCENE_DATA.cameraPos[1] += forwardY * zoomSpeed * zoomDirection;
         SCENE_DATA.cameraPos[2] += forwardZ * zoomSpeed * zoomDirection;
-
-        // No need to call render() here as the animate loop will pick up the change
+        resetAccumulation(); // Reset accumulation on zoom
     });
-
-    window.addEventListener('resize', render); // Keep resize handler
+    window.addEventListener('resize', render);
 }
 
 function setupWASDControls() {
@@ -225,37 +263,43 @@ function setupWASDControls() {
     window.addEventListener('keydown', (e) => {
         const yaw = SCENE_DATA.cameraRotation[0];
         const pitch = SCENE_DATA.cameraRotation[1];
-
-        // Calculate forward vector including pitch for looking up/down
         const forward = [
             Math.sin(yaw) * Math.cos(pitch),
             -Math.sin(pitch),
             -Math.cos(yaw) * Math.cos(pitch)
         ];
-
-        // Right vector should always be horizontal (on the XZ plane)
         const right = [Math.cos(yaw), 0, Math.sin(yaw)];
-
-        switch (e.key.toLowerCase()) { // Use toLowerCase() to handle Caps Lock
+        let moved = false;
+        switch (e.key.toLowerCase()) {
             case 'w':
                 SCENE_DATA.cameraPos[0] += forward[0] * moveSpeed;
                 SCENE_DATA.cameraPos[1] += forward[1] * moveSpeed;
                 SCENE_DATA.cameraPos[2] += forward[2] * moveSpeed;
+                moved = true;
                 break;
             case 's':
                 SCENE_DATA.cameraPos[0] -= forward[0] * moveSpeed;
                 SCENE_DATA.cameraPos[1] -= forward[1] * moveSpeed;
                 SCENE_DATA.cameraPos[2] -= forward[2] * moveSpeed;
+                moved = true;
                 break;
             case 'a':
                 SCENE_DATA.cameraPos[0] -= right[0] * moveSpeed;
                 SCENE_DATA.cameraPos[2] -= right[2] * moveSpeed;
+                moved = true;
                 break;
             case 'd':
                 SCENE_DATA.cameraPos[0] += right[0] * moveSpeed;
                 SCENE_DATA.cameraPos[2] += right[2] * moveSpeed;
+                moved = true;
                 break;
         }
+        if (moved) resetAccumulation(); // Reset accumulation on WASD move
     });
+}
+
+// To reset accumulation on camera movement, add this to camera controls:
+function resetAccumulation() {
+    frameCount = 0;
 }
 

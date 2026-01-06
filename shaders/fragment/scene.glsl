@@ -28,13 +28,20 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
         if (i >= u_quadCount) break;
         float t = intersectQuad(rayOrigin, rayDir, u_quadCorners[i], u_quadU[i], u_quadV[i], u_quadNormals[i]);
         if (t > EPSILON && (closestHit.t < 0.0 || t < closestHit.t)) {
+            vec3 n = u_quadNormals[i];
+            bool isBackface = dot(n, rayDir) > 0.0;
+            // If this is the first ray (primary ray), skip backfaces
+            // Heuristic: if rayOrigin == u_cameraPos, treat as primary ray
+            // (Assume u_cameraPos is available as a uniform)
+            bool isPrimaryRay = all(lessThan(abs(rayOrigin - u_cameraPos), vec3(EPSILON * 10.0)));
+            if (isPrimaryRay && isBackface) {
+                continue;
+            }
+            if (isBackface) {
+                n = -n;
+            }
             closestHit.t = t;
             closestHit.objectID = i + u_sphereCount; // Offset by sphere count
-
-            vec3 n = u_quadNormals[i];
-            if (dot(n, rayDir) > 0.0) {
-                n = -n;
-            }    
             closestHit.normal = n;
             closestHit.material.diffuseColor = u_quadDiffuseColors[i];
             closestHit.material.reflectivity = u_quadReflectivity[i];
@@ -76,15 +83,15 @@ HitRecord findClosestHit(vec3 rayOrigin, vec3 rayDir) {
         closestHit.objectID = PLANE_ID;
         vec3 hitPoint = rayOrigin + rayDir * t_plane;
         closestHit.normal = vec3(0.0, 1.0, 0.0);
-        closestHit.material.reflectivity = 0.0;
+        closestHit.material.reflectivity = 0.5;
         closestHit.material.ior = 1.0;
         closestHit.material.materialType = LAMBERTIAN;
         closestHit.material.emissiveColor = vec3(0.0);
 
         float checkSize = 1.0;
         vec2 coords = hitPoint.xz / checkSize;
-        float checker = mod(floor(coords.x) + floor(coords.y), 2.0);
-        closestHit.material.diffuseColor = mix(u_planeColorA, u_planeColorB, checker);
+        // float checker = mod(floor(coords.x) + floor(coords.y), 2.0);
+        closestHit.material.diffuseColor = u_planeColorB;//, u_planeColorB, checker);
     }
 
     return closestHit;

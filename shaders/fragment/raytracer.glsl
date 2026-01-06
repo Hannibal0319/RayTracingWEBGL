@@ -1,6 +1,6 @@
 // --- Ray Tracing Logic ---
 
-vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
+vec3 traceRay(vec3 rayOrigin, vec3 rayDir, float time) {
     vec3 accumulatedColor = vec3(0.0);
     vec3 currentRayOrigin = rayOrigin;
     vec3 currentRayDir = rayDir;
@@ -42,7 +42,7 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
             totalWeight *= hit.material.reflectivity;
         }
 
-        if (totalWeight.x < 0.01 && totalWeight.y < 0.01 && totalWeight.z < 0.01) break;
+        if (totalWeight.x < 0.01 && totalWeight.y < 0.01 && totalWeight.z < 0.01) {break;};
 
         vec3 nextRayDir;
         if (hit.material.materialType == REFRACTIVE) {
@@ -72,11 +72,11 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
                 nextRayDir = reflect(nextRayDir, N);
             }
         } else { // Lambertian
-            nextRayDir = cosineSampleHemisphere(hit.normal);
+            nextRayDir = cosineSampleHemisphere(hit.normal, time);
         }
         
         currentRayDir = nextRayDir;
         currentRayOrigin = hitPoint + currentRayDir * EPSILON;
     }
-    return accumulatedColor;
+    return sqrt(accumulatedColor * totalWeight);
 }

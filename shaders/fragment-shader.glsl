@@ -17,7 +17,8 @@ void main() {
     vec3 camUp = camRotation * vec3(0.0, 1.0, 0.0);
 
     for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {
-        vec2 jitter = vec2(random(gl_FragCoord.xy + float(i)), random(gl_FragCoord.xy - float(i))) - 0.5;
+        float timeJitter = u_time + float(i) * 13.37;
+        vec2 jitter = vec2(random(gl_FragCoord.xy + float(i), timeJitter), random(gl_FragCoord.xy - float(i), timeJitter + 42.0)) - 0.5;
         vec2 fragCoord = gl_FragCoord.xy + jitter;
         vec2 uv = (2.0 * fragCoord - u_resolution.xy) / u_resolution.y;
 
@@ -26,7 +27,7 @@ void main() {
 
         vec3 focalPoint = u_cameraPos + rayDirCenter * u_focalDistance;
 
-        vec2 randDisk = vec2(random(uv + float(i)), random(uv - float(i)));
+        vec2 randDisk = vec2(random(uv + float(i), timeJitter + 7.0), random(uv - float(i), timeJitter + 21.0));
         float r = u_aperture * sqrt(randDisk.x);
         float theta = 2.0 * 3.1415926535 * randDisk.y;
         vec3 lensOffset = camRight * r * cos(theta) + camUp * r * sin(theta);
@@ -34,9 +35,16 @@ void main() {
         vec3 rayOrigin = u_cameraPos + lensOffset;
         vec3 rayDir = normalize(focalPoint - rayOrigin);
 
-        finalColor += traceRay(rayOrigin, rayDir);
+        finalColor += traceRay(rayOrigin, rayDir, u_time);
     }
 
     finalColor /= float(SAMPLES_PER_PIXEL);
-    gl_FragColor = vec4(finalColor, 1.0);
+
+    // Progressive accumulation
+    vec3 prevColor = vec3(0.0);
+    if (u_frameCount > 0) {
+        prevColor = texture2D(u_accumTexture, gl_FragCoord.xy / u_resolution).rgb;
+    }
+    vec3 accumColor = (prevColor * float(u_frameCount) + finalColor) / float(u_frameCount + 1);
+    gl_FragColor = vec4(accumColor, 1.0);
 }
