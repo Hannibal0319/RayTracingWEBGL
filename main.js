@@ -21,6 +21,7 @@ const RENDER_SCALE = 1.0; // render at native canvas resolution
 const MAX_TRIANGLES = 18000; // keep in sync with fragment/uniforms.glsl
 
 const M_GLASS = new Material([0.95, 0.95, 0.95], 0.9, 1.5, REFRACTIVE);
+const M_LOW_REFRACT = new Material([0.9, 0.9, 0.9], 0.9, 1.5, REFRACTIVE);
 const M_GOLD = new Material([1.0, 0.71, 0.29], 0.7, 0.47, REFLECTIVE);
 const M_SILVER = new Material([0.6, 0.6, 0.6], 0.7, 0.14, REFLECTIVE);
 const M_WATER = new Material([0.8, 0.9, 1.0], 0.7, 1.33, REFRACTIVE);
@@ -63,8 +64,8 @@ const SCENE_DATA = {
 
     // Sky/point light used by the shader (position in world space, color includes intensity)
     pointLight: {
-        pos: [4.0, 15.0, -4.0],
-        color: [1.2, 1.2, 1.2]
+        pos: [3.0, 6.0, -3.0],
+        color: [4.0, 4.0, 4.0]
     }
 };
 
@@ -523,7 +524,7 @@ async function main() {
                 'models/teapot.obj',
                 M_GOLD,
                 true,
-                { targetSize: 3.0, translate: [0.0, 0.5, -8.0] }
+                { targetSize: 40.0, translate: [0.0, 15, -50.0] }
             );
         }
         setupMouseControls();

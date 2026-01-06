@@ -195,8 +195,27 @@ vec3 shade(HitRecord hit, vec3 rayOrigin, vec3 rayDir) {
     vec3 hitPoint = rayOrigin + rayDir * hit.t;
     vec3 emissiveLighting = vec3(0.0); //accumulateEmissiveLights(hitPoint, N, hit.objectID);
 
-    // Point light removed; rely on ambient + emissive sources only.
+    // Sky point light (shadowed)
+    vec3 Lp = u_pointLightPos - hitPoint;
+    float distSq = dot(Lp, Lp);
+    float dist = sqrt(distSq);
+    vec3 Ldir = Lp / dist;
+    float ndotl = max(0.0, dot(N, Ldir));
     vec3 pointLight = vec3(0.0);
+    if (ndotl > 0.0) {
+        vec3 shadowOrigin = hitPoint + N * EPSILON * 4.0;
+        bool blocked = bvhAnyHit(shadowOrigin, Ldir, dist, true, -1);
+        if (!blocked) {
+            float attenuation = 1.0 / max(1.0, distSq);
+            pointLight = u_pointLightColor * ndotl * attenuation;
+        }
+    }
 
-    return hit.material.diffuseColor * ambientColor + emissiveBoost + emissiveLighting + pointLight;
+    // View-facing fill to keep silhouettes from going black; modulated by albedo
+    float viewNdotL = max(0.0, dot(N, -rayDir));
+    vec3 viewFill = hit.material.diffuseColor * viewNdotL * 0.35;
+
+    // Apply albedo to direct light
+    vec3 lit = hit.material.diffuseColor * (ambientColor + pointLight) + emissiveBoost + emissiveLighting + viewFill;
+    return lit;
 }

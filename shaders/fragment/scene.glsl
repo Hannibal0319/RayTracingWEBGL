@@ -107,7 +107,7 @@ TriHitData traverseBVHClosest(vec3 rayOrigin, vec3 rayDir, float maxDist) {
                     hit.diffuse = diff;
                     hit.info = info;
                     hit.emission = emit;
-                    vec3 n = normalize(cross(e1, e2));
+                    vec3 n = normalize(cross(e2, e1));
                     if (dot(n, rayDir) > 0.0) n = -n;
                     hit.normal = n;
                     maxDist = t;

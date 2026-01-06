@@ -208,8 +208,8 @@ function setupMouseControls() {
         // Yaw (Rotation around Y axis) - controls left/right looking
         SCENE_DATA.cameraRotation[0] -= deltaX * rotationSpeed; 
         
-        // Pitch (Rotation around X axis) - controls up/down looking, clamped
-        SCENE_DATA.cameraRotation[1] += deltaY * rotationSpeed;
+        // Pitch (Rotation around X axis) - invert mouse Y so dragging up looks up
+        SCENE_DATA.cameraRotation[1] -= deltaY * rotationSpeed;
         // Clamp pitch to prevent camera flipping over
         SCENE_DATA.cameraRotation[1] = Math.max(-1.5, Math.min(1.5, SCENE_DATA.cameraRotation[1]));
 
@@ -224,13 +224,11 @@ function setupMouseControls() {
         const zoomDirection = e.deltaY < 0 ? 1.0 : -1.0; // Scroll up to zoom in, down to zoom out
 
         // This is a simple dolly zoom. We move the camera along its forward vector.
-        const yaw = SCENE_DATA.cameraRotation[0];
-        const pitch = SCENE_DATA.cameraRotation[1];
-
-        // Calculate the forward vector based on current camera rotation
-        const forwardX = Math.sin(yaw) * Math.cos(pitch);
-        const forwardY = Math.sin(pitch);
-        const forwardZ = -Math.cos(yaw) * Math.cos(pitch);
+        const camMat = computeCameraRotationMatrix(SCENE_DATA.cameraRotation);
+        // Basis from camera matrix (column-major)
+        const forwardX = -camMat[6];
+        const forwardY = -camMat[7];
+        const forwardZ = -camMat[8];
         
         // Update camera position
         SCENE_DATA.cameraPos[0] += forwardX * zoomSpeed * zoomDirection;
@@ -246,18 +244,20 @@ function setupMouseControls() {
 function setupWASDControls() {
     const moveSpeed = 0.1;
     window.addEventListener('keydown', (e) => {
-        const yaw = SCENE_DATA.cameraRotation[0];
-        const pitch = SCENE_DATA.cameraRotation[1];
+        const camMat = computeCameraRotationMatrix(SCENE_DATA.cameraRotation);
 
-        // Calculate forward vector including pitch for looking up/down
+        // Forward/right derived directly from the camera rotation matrix (column-major)
         const forward = [
-            Math.sin(yaw) * Math.cos(pitch),
-            -Math.sin(pitch),
-            -Math.cos(yaw) * Math.cos(pitch)
+            -camMat[6],
+            -camMat[7],
+            -camMat[8]
         ];
 
-        // Right vector should always be horizontal (on the XZ plane)
-        const right = [Math.cos(yaw), 0, Math.sin(yaw)];
+        const right = [
+            camMat[0],
+            camMat[1],
+            camMat[2]
+        ];
 
         switch (e.key.toLowerCase()) { // Use toLowerCase() to handle Caps Lock
             case 'w':
