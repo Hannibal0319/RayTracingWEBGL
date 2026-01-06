@@ -1,6 +1,6 @@
 // --- Ray Tracing Logic ---
 
-vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
+vec3 traceRay(vec3 rayOrigin, vec3 rayDir, float time) {
     vec3 accumulatedColor = vec3(0.0);
     vec3 currentRayOrigin = rayOrigin;
     vec3 currentRayDir = rayDir;
@@ -21,7 +21,7 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
 
         vec3 hitPoint = currentRayOrigin + currentRayDir * hit.t;
         vec3 localColor = shade(hit, currentRayOrigin, currentRayDir);
-        accumulatedColor += totalWeight * localColor * (1.0 - hit.material.reflectivity);
+        accumulatedColor += totalWeight * localColor * (1.0 - hit.material.reflectivity);// * dot(hit.normal, currentRayDir) * -1.0;
         
         // For reflective materials, tint the totalWeight by the material color
         if (hit.material.materialType == REFLECTIVE) {
@@ -30,7 +30,7 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
             totalWeight *= hit.material.reflectivity;
         }
 
-        if (totalWeight.x < 0.01 && totalWeight.y < 0.01 && totalWeight.z < 0.01) break;
+        if (totalWeight.x < 0.01 && totalWeight.y < 0.01 && totalWeight.z < 0.01) {break;};
 
         vec3 nextRayDir;
         if (hit.material.materialType == REFRACTIVE) {
@@ -46,11 +46,11 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
         } else if (hit.material.materialType == REFLECTIVE) {
             nextRayDir = reflect(currentRayDir, hit.normal);
         } else { // Lambertian
-            nextRayDir = cosineSampleHemisphere(hit.normal);
+            nextRayDir = cosineSampleHemisphere(hit.normal, time);
         }
         
         currentRayDir = nextRayDir;
         currentRayOrigin = hitPoint + currentRayDir * EPSILON;
     }
-    return accumulatedColor;
+    return sqrt(accumulatedColor * totalWeight);
 }

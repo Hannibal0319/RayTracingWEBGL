@@ -53,7 +53,7 @@ vec3 accumulateEmissiveLights(vec3 hitPoint, vec3 N, int hitObjectID) {
         if (blocked) continue;
 
         // Simple inverse-square attenuation, clamp to avoid huge values when very close
-        float attenuation = 1.0 / max(1.0, distSq);
+        float attenuation = 1.0; // max(1.0, distSq);
         result += u_sphereEmissionColors[i] * ndotl * attenuation;
     }
 
@@ -203,7 +203,7 @@ vec3 shade(HitRecord hit, vec3 rayOrigin, vec3 rayDir) {
     // Give polygonal surfaces a tiny emissive lift to stay visible when nearly edge-on
     vec3 emissiveBoost = (isQuad || isTriangle) ? hit.material.diffuseColor * 0.05 : vec3(0.0);
 
-    vec3 emissiveLighting = accumulateEmissiveLights(rayOrigin + rayDir * hit.t, N, hit.objectID);
+    // vec3 emissiveLighting = accumulateEmissiveLights(rayOrigin + rayDir * hit.t, N, hit.objectID);
 
-    return hit.material.diffuseColor * ambientColor + emissiveLighting + emissiveBoost;
+    return hit.material.diffuseColor;
 }
