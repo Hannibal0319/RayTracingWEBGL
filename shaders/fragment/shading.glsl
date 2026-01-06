@@ -193,23 +193,10 @@ vec3 shade(HitRecord hit, vec3 rayOrigin, vec3 rayDir) {
     vec3 emissiveBoost = (isQuad || isTriangle) ? hit.material.diffuseColor * 0.05 : vec3(0.0);
 
     vec3 hitPoint = rayOrigin + rayDir * hit.t;
-    vec3 emissiveLighting = accumulateEmissiveLights(hitPoint, N, hit.objectID);
+    vec3 emissiveLighting = vec3(0.0); //accumulateEmissiveLights(hitPoint, N, hit.objectID);
 
-    // Sky point light (shadowed)
-    vec3 Lp = u_pointLightPos - hitPoint;
-    float distSq = dot(Lp, Lp);
-    float dist = sqrt(distSq);
-    vec3 Ldir = Lp / dist;
-    float ndotl = max(0.0, dot(N, Ldir));
+    // Point light removed; rely on ambient + emissive sources only.
     vec3 pointLight = vec3(0.0);
-    if (ndotl > 0.0) {
-        vec3 shadowOrigin = hitPoint + N * EPSILON * 4.0;
-        bool blocked = bvhAnyHit(shadowOrigin, Ldir, dist, true, -1);
-        if (!blocked) {
-            float attenuation = 1.0 / max(1.0, distSq);
-            pointLight = u_pointLightColor * ndotl * attenuation;
-        }
-    }
 
     return hit.material.diffuseColor * ambientColor + emissiveBoost + emissiveLighting + pointLight;
 }

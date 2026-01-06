@@ -18,7 +18,7 @@ var meshBoundsMax = [0, 0, 0];
 const RENDER_SCALE = 1.0; // render at native canvas resolution
 
 // Shader-side triangle cap (must match MAX_TRIANGLES in fragment/uniforms.glsl)
-const MAX_TRIANGLES = 20000; // keep in sync with fragment/uniforms.glsl
+const MAX_TRIANGLES = 18000; // keep in sync with fragment/uniforms.glsl
 
 const M_GLASS = new Material([0.95, 0.95, 0.95], 0.9, 1.5, REFRACTIVE);
 const M_GOLD = new Material([1.0, 0.71, 0.29], 0.7, 0.47, REFLECTIVE);
@@ -43,8 +43,8 @@ const SCENE_DATA = {
     ],
 
     quads: [
-        //new Quad([1.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], M_GOLD),
-        new Quad([3.5, -0.5, -4.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], M_LIGHT_SOFT),
+        new Quad([1.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], M_GOLD),
+        //new Quad([3.5, -0.5, -4.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], M_LIGHT_SOFT),
 
     ],
 
@@ -63,7 +63,7 @@ const SCENE_DATA = {
 
     // Sky/point light used by the shader (position in world space, color includes intensity)
     pointLight: {
-        pos: [4.0, 5.0, -4.0],
+        pos: [4.0, 15.0, -4.0],
         color: [1.2, 1.2, 1.2]
     }
 };
@@ -510,7 +510,7 @@ let isDragging = false;
 const rotationSpeed = 0.005;
 
 
-const add_teapot = false
+const add_teapot = true
 /**
  * Initializes and sets up the rendering loop.
  */
@@ -521,7 +521,7 @@ async function main() {
         if (add_teapot) {
             await loadOBJIntoScene(
                 'models/teapot.obj',
-                M_WOOD,
+                M_GOLD,
                 true,
                 { targetSize: 3.0, translate: [0.0, 0.5, -8.0] }
             );
