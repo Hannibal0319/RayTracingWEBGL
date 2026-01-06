@@ -78,7 +78,7 @@ const vec3 SKY_HORIZON_COLOR = vec3(0.9, 0.95, 1.0);
 const vec3 SKY_ZENITH_COLOR = vec3(0.05, 0.2, 0.4);
 const float AMBIENT_INTENSITY = 0.05;
 const float EPSILON = 0.001;
-const int MAX_BOUNCES = 20;
+const int MAX_BOUNCES = 32;
 const int SAMPLES_PER_PIXEL = 1;
 const float PI = 3.14159265359;
 

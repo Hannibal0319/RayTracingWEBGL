@@ -78,5 +78,5 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir, float time) {
         currentRayDir = nextRayDir;
         currentRayOrigin = hitPoint + currentRayDir * EPSILON;
     }
-    return sqrt(accumulatedColor * totalWeight);
+    return pow(accumulatedColor * totalWeight, vec3(0.3));
 }

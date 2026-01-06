@@ -1,3 +1,170 @@
+// --- Material Controls UI Logic ---
+function updateMaterialUIVisibility(type) {
+    document.getElementById('mat-diffuse-group').style.display = 'none';
+    document.getElementById('mat-reflect-group').style.display = 'none';
+    document.getElementById('mat-ior-group').style.display = 'none';
+    document.getElementById('mat-metallic-group').style.display = 'none';
+    document.getElementById('mat-roughness-group').style.display = 'none';
+    if (type === 0) { // Lambertian
+        document.getElementById('mat-diffuse-group').style.display = '';
+    } else if (type === 1) { // Reflective
+        document.getElementById('mat-diffuse-group').style.display = '';
+        document.getElementById('mat-reflect-group').style.display = '';
+    } else if (type === 2) { // Refractive
+        document.getElementById('mat-diffuse-group').style.display = '';
+        document.getElementById('mat-reflect-group').style.display = '';
+        document.getElementById('mat-ior-group').style.display = '';
+    } else if (type === 4) { // Metallic/Roughness
+        document.getElementById('mat-diffuse-group').style.display = '';
+        document.getElementById('mat-metallic-group').style.display = '';
+        document.getElementById('mat-roughness-group').style.display = '';
+    }
+}
+function updateMaterialLabels(mat) {
+    document.getElementById('mat-color-val').textContent =
+        `rgb(${(+mat.diffuseColor[0]).toFixed(2)}, ${(+mat.diffuseColor[1]).toFixed(2)}, ${(+mat.diffuseColor[2]).toFixed(2)})`;
+    document.getElementById('mat-reflect-val').textContent = mat.reflectivity.toFixed(2);
+    document.getElementById('mat-ior-val').textContent = mat.ior.toFixed(2);
+    document.getElementById('mat-metallic-val').textContent = (mat.metallic ?? 0.0).toFixed(2);
+    document.getElementById('mat-roughness-val').textContent = (mat.roughness ?? 0.5).toFixed(2);
+}
+function showMaterialControls(mat) {
+    const panel = document.getElementById('material-controls');
+    if (!panel) return;
+    panel.classList.remove('hidden');
+    document.getElementById('mat-type').value = mat.materialType;
+    document.getElementById('mat-r').value = mat.diffuseColor[0];
+    document.getElementById('mat-g').value = mat.diffuseColor[1];
+    document.getElementById('mat-b').value = mat.diffuseColor[2];
+    document.getElementById('mat-reflect').value = mat.reflectivity;
+    document.getElementById('mat-ior').value = mat.ior;
+    document.getElementById('mat-metallic').value = mat.metallic ?? 0.0;
+    document.getElementById('mat-roughness').value = mat.roughness ?? 0.5;
+    updateMaterialLabels(mat);
+    updateMaterialUIVisibility(mat.materialType);
+}
+function hideMaterialControls() {
+    const panel = document.getElementById('material-controls');
+    if (panel) panel.classList.add('hidden');
+}
+['mat-type','mat-r','mat-g','mat-b','mat-reflect','mat-ior','mat-metallic','mat-roughness'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function() {
+        if (!window._selectedMaterial) return;
+        if (id==='mat-type') {
+            window._selectedMaterial.materialType = parseInt(this.value);
+            updateMaterialUIVisibility(window._selectedMaterial.materialType);
+        }
+        if (id==='mat-r') window._selectedMaterial.diffuseColor[0] = parseFloat(this.value);
+        if (id==='mat-g') window._selectedMaterial.diffuseColor[1] = parseFloat(this.value);
+        if (id==='mat-b') window._selectedMaterial.diffuseColor[2] = parseFloat(this.value);
+        if (id==='mat-reflect') window._selectedMaterial.reflectivity = parseFloat(this.value);
+        if (id==='mat-ior') window._selectedMaterial.ior = parseFloat(this.value);
+        if (id==='mat-metallic') window._selectedMaterial.metallic = parseFloat(this.value);
+        if (id==='mat-roughness') window._selectedMaterial.roughness = parseFloat(this.value);
+        updateMaterialLabels(window._selectedMaterial);
+        if (window.resetAccumulation) resetAccumulation();
+    });
+});
+window.showMaterialControls = showMaterialControls;
+window.hideMaterialControls = hideMaterialControls;
+// --- Object Picking ---
+function getRayFromScreen(x, y) {
+    // Get canvas pixel coordinates
+    const rect = canvas.getBoundingClientRect();
+    const px = x - rect.left;
+    const py = y - rect.top;
+    const width = rect.width;
+    const height = rect.height;
+
+    const fragCoord = [px, height - py];
+    // Compute uv as in shader
+    const uv = [
+        (2.0 * fragCoord[0] - width) / height,
+        (2.0 * fragCoord[1] - height) / height
+    ];
+    // Camera rotation
+    const yaw = SCENE_DATA.cameraRotation[0];
+    const pitch = SCENE_DATA.cameraRotation[1];
+    const sy = Math.sin(yaw), cy = Math.cos(yaw);
+    const sx = Math.sin(pitch), cx = Math.cos(pitch);
+    // Build rotation matrix: rotateY * rotateX
+    const camRotation = [
+        [cy, sx*sy, sy*cx],
+        [0, cx, -sx],
+        [-sy, sx*cy, cy*cx]
+    ];
+    // Camera right and up
+    const camRight = [camRotation[0][0], camRotation[1][0], camRotation[2][0]];
+    const camUp = [camRotation[0][1], camRotation[1][1], camRotation[2][1]];
+    // Ray direction (center, no jitter)
+    let rayDir = [uv[0], uv[1], -1.0];
+    // Apply rotation
+    rayDir = [
+        camRotation[0][0]*rayDir[0] + camRotation[0][1]*rayDir[1] + camRotation[0][2]*rayDir[2],
+        camRotation[1][0]*rayDir[0] + camRotation[1][1]*rayDir[1] + camRotation[1][2]*rayDir[2],
+        camRotation[2][0]*rayDir[0] + camRotation[2][1]*rayDir[1] + camRotation[2][2]*rayDir[2]
+    ];
+    // Normalize
+    const len = Math.sqrt(rayDir[0]*rayDir[0] + rayDir[1]*rayDir[1] + rayDir[2]*rayDir[2]);
+    rayDir = [rayDir[0]/len, rayDir[1]/len, rayDir[2]/len];
+    // Focal point
+    const camPos = SCENE_DATA.cameraPos;
+    const focalDistance = SCENE_DATA.focalDistance;
+    const focalPoint = [
+        camPos[0] + rayDir[0] * focalDistance,
+        camPos[1] + rayDir[1] * focalDistance,
+        camPos[2] + rayDir[2] * focalDistance
+    ];
+    // No aperture/lens offset for picking (center ray)
+    const rayOrigin = camPos.slice();
+    const pickDir = [
+        focalPoint[0] - rayOrigin[0],
+        focalPoint[1] - rayOrigin[1],
+        focalPoint[2] - rayOrigin[2]
+    ];
+    const pickLen = Math.sqrt(pickDir[0]*pickDir[0] + pickDir[1]*pickDir[1] + pickDir[2]*pickDir[2]);
+    const pickDirNorm = [pickDir[0]/pickLen, pickDir[1]/pickLen, pickDir[2]/pickLen];
+    return {origin: rayOrigin, dir: pickDirNorm};
+}
+
+function pickObject(rayOrigin, rayDir) {
+    // Find closest intersection with spheres
+    let minT = Infinity;
+    let picked = null;
+    SCENE_DATA.spheres.forEach((s, i) => {
+        const oc = [rayOrigin[0]-s.center[0], rayOrigin[1]-s.center[1], rayOrigin[2]-s.center[2]];
+        const a = rayDir[0]*rayDir[0] + rayDir[1]*rayDir[1] + rayDir[2]*rayDir[2];
+        const b = 2 * (oc[0]*rayDir[0] + oc[1]*rayDir[1] + oc[2]*rayDir[2]);
+        const c = oc[0]*oc[0] + oc[1]*oc[1] + oc[2]*oc[2] - s.radius*s.radius;
+        const disc = b*b - 4*a*c;
+        if (disc < 0) return;
+        const t0 = (-b - Math.sqrt(disc)) / (2*a);
+        const t1 = (-b + Math.sqrt(disc)) / (2*a);
+        let t = t0 > 0.001 ? t0 : (t1 > 0.001 ? t1 : null);
+        if (t && t < minT) {
+            minT = t;
+            picked = {type: 'sphere', index: i, t};
+        }
+    });
+
+    return picked;
+}
+
+function setupObjectPicking() {
+    canvas.addEventListener('click', function(e) {
+        const {origin, dir} = getRayFromScreen(e.clientX, e.clientY);
+        const picked = pickObject(origin, dir);
+        if (picked && picked.type === 'sphere') {
+            const mat = SCENE_DATA.spheres[picked.index].material;
+            window._selectedMaterial = mat;
+            if (window.showMaterialControls) window.showMaterialControls(mat);
+            resetAccumulation();
+        } else {
+            window._selectedMaterial = null;
+            if (window.hideMaterialControls) window.hideMaterialControls();
+        }
+    });
+}
 /**
  * Renders the scene.
  */

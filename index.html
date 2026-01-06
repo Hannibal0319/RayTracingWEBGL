@@ -56,7 +56,42 @@
         <!-- Sphere and Light Parameters -->
         <div class="text-sm text-gray-400 space-y-1">
             <p><strong>Scene Configuration:</strong></p>
-            
+        </div>
+        <!-- Material Controls for Selected Object -->
+        <div id="material-controls" class="hidden mt-4 p-4 bg-gray-700 rounded-xl space-y-3">
+            <h2 class="text-lg font-bold text-indigo-300">Selected Object Material</h2>
+            <div class="flex flex-col gap-2">
+                <label>Material Type
+                    <select id="mat-type" class="w-full bg-gray-800 text-white rounded p-1 mt-1">
+                        <option value="0">Lambertian</option>
+                        <option value="1">Reflective</option>
+                        <option value="2">Refractive</option>
+                        <option value="4">Metallic/Roughness</option>
+                    </select>
+                </label>
+                <label id="mat-diffuse-group">Diffuse Color
+                    <input id="mat-r" type="range" min="0" max="1" step="0.01" value="1" class="w-full">
+                    <input id="mat-g" type="range" min="0" max="1" step="0.01" value="1" class="w-full">
+                    <input id="mat-b" type="range" min="0" max="1" step="0.01" value="1" class="w-full">
+                    <span id="mat-color-val" class="ml-2 font-mono"></span>
+                </label>
+                <label id="mat-reflect-group">Reflectivity
+                    <input id="mat-reflect" type="range" min="0" max="1" step="0.01" value="0" class="w-full">
+                    <span id="mat-reflect-val" class="ml-2 font-mono"></span>
+                </label>
+                <label id="mat-ior-group">IOR
+                    <input id="mat-ior" type="range" min="1" max="2.5" step="0.01" value="1" class="w-full">
+                    <span id="mat-ior-val" class="ml-2 font-mono"></span>
+                </label>
+                <label id="mat-metallic-group">Metallic
+                    <input id="mat-metallic" type="range" min="0" max="1" step="0.01" value="0" class="w-full">
+                    <span id="mat-metallic-val" class="ml-2 font-mono"></span>
+                </label>
+                <label id="mat-roughness-group">Roughness
+                    <input id="mat-roughness" type="range" min="0" max="1" step="0.01" value="0.5" class="w-full">
+                    <span id="mat-roughness-val" class="ml-2 font-mono"></span>
+                </label>
+            </div>
         </div>
     </div>
 </body>
