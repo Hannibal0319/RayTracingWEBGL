@@ -56,45 +56,9 @@
             <div id="fps-counter" class="absolute top-2 left-2 text-sm text-white bg-black bg-opacity-50 px-2 py-1 rounded">FPS: --</div>
         </div>
 
-        <!-- Controls -->
-        <div class="grid gap-4 sm:grid-cols-2 text-sm text-gray-200">
-            <div class="space-y-2">
-                <p class="text-xs uppercase tracking-wide text-gray-400">Camera & Plane</p>
-                <label class="block">Aperture
-                    <input id="aperture-slider" type="range" min="0" max="0.06" step="0.0005" value="0.000" class="w-full">
-                    <span id="aperture-value" class="text-xs text-gray-400">0.000</span>
-                </label>
-                <label class="block">Field of View (deg)
-                    <input id="fov-slider" type="range" min="20" max="110" step="1" value="60" class="w-full">
-                    <span id="fov-value" class="text-xs text-gray-400">60</span>
-                </label>
-                <label class="block">Plane Y
-                    <input id="planeY-slider" type="range" min="-3" max="1" step="0.05" value="-1.0" class="w-full">
-                    <span id="planeY-value" class="text-xs text-gray-400">-1.0</span>
-                </label>
-            </div>
-            <div class="space-y-2">
-                <p class="text-xs uppercase tracking-wide text-gray-400">Teapot Material</p>
-                <label class="block">Reflectivity
-                    <input id="teapot-reflectivity" type="range" min="0" max="1" step="0.01" value="0.10" class="w-full">
-                    <span id="teapot-reflectivity-value" class="text-xs text-gray-400">0.10</span>
-                </label>
-                <label class="block">Index of Refraction
-                    <input id="teapot-ior" type="range" min="1" max="2.5" step="0.01" value="1.50" class="w-full">
-                    <span id="teapot-ior-value" class="text-xs text-gray-400">1.50</span>
-                </label>
-            </div>
-            <div class="space-y-2">
-                <p class="text-xs uppercase tracking-wide text-gray-400">Sky Point Light</p>
-                <label class="block">Intensity
-                    <input id="light-intensity" type="range" min="0" max="20" step="0.1" value="8.0" class="w-full">
-                    <span id="light-intensity-value" class="text-xs text-gray-400">8.0</span>
-                </label>
-            </div>
-            <div class="space-y-1 text-gray-400">
-                <p><strong>Scene Configuration:</strong></p>
-                <p id="gl-version" class="text-xs text-gray-300">Detecting WebGL...</p>
-            </div>
+        <div class="space-y-1 text-gray-400 text-sm">
+            <p><strong>Scene Configuration:</strong></p>
+            <p id="gl-version" class="text-xs text-gray-300">Detecting WebGL...</p>
         </div>
     </div>
 </body>

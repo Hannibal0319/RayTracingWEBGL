@@ -10,9 +10,9 @@ uint hash2(uvec2 v) {
 }
 
 float random(vec2 st) {
-    // Use tiled blue-noise texture (fast, well-distributed noise)
+    // Use tiled blue-noise texture for stable RNG in fragment path
     vec2 uv = fract(st * (1.0 / u_noiseTexSize));
-    return texture2D(u_noiseTex, uv).r;
+    return texture(u_noiseTex, uv).r;
 }
 
 mat3 rotateX(float angle) {

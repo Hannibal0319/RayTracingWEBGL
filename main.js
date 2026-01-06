@@ -15,7 +15,7 @@ var TEX_FORMATS = null; // chosen once after GL init
 var meshBoundsMin = [0, 0, 0];
 var meshBoundsMax = [0, 0, 0];
 
-const RENDER_SCALE = 0.001; // reduce canvas resolution to save GPU memory
+const RENDER_SCALE = 1.0; // render at native canvas resolution
 
 // Shader-side triangle cap (must match MAX_TRIANGLES in fragment/uniforms.glsl)
 const MAX_TRIANGLES = 20000; // keep in sync with fragment/uniforms.glsl
@@ -57,8 +57,15 @@ const SCENE_DATA = {
     // Camera Controls
     cameraPos: [0.0, 0.0, 0.0],
     cameraRotation: [0.0, 0.0],
+    fov: 60.0,
     aperture: 0.000,
-    focalDistance: 5.0
+    focalDistance: 5.0,
+
+    // Sky/point light used by the shader (position in world space, color includes intensity)
+    pointLight: {
+        pos: [4.0, 5.0, -4.0],
+        color: [1.2, 1.2, 1.2]
+    }
 };
 
 // --- OBJ Loading Helpers ---

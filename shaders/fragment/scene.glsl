@@ -9,7 +9,7 @@ vec3 triTexFetch(int triIndex, int row) {
     int col = triIndex - block * width;
     int texRow = block * int(TRI_ROWS) + row;
     vec2 uv = vec2((float(col) + 0.5) / u_triTexSize.x, (float(texRow) + 0.5) / u_triTexSize.y);
-    vec4 texel = texture2D(u_triTex, uv);
+    vec4 texel = texture(u_triTex, uv);
     return texel.xyz;
 }
 
@@ -37,9 +37,9 @@ BVHNodeData fetchNode(int idx) {
     int row = idx / width;
     int col = idx - row * width;
     vec2 uv = vec2((float(col) + 0.5) / u_bvhTexSize.x, (float(row) + 0.5) / u_bvhTexSize.y);
-    vec4 t0 = texture2D(u_bvhTex0, uv);
-    vec4 t1 = texture2D(u_bvhTex1, uv);
-    vec4 t2 = texture2D(u_bvhTex2, uv);
+    vec4 t0 = texture(u_bvhTex0, uv);
+    vec4 t1 = texture(u_bvhTex1, uv);
+    vec4 t2 = texture(u_bvhTex2, uv);
     BVHNodeData n;
     n.bmin = t0.xyz;
     n.bmax = t1.xyz;
@@ -66,14 +66,6 @@ struct TriHitData {
     vec3 emission;
     int triIndex;
 };
-
-vec3 makeSafeDir(vec3 d) {
-    return vec3(
-        (d.x > 0.0) ? max(d.x, 1e-6) : min(d.x, -1e-6),
-        (d.y > 0.0) ? max(d.y, 1e-6) : min(d.y, -1e-6),
-        (d.z > 0.0) ? max(d.z, 1e-6) : min(d.z, -1e-6)
-    );
-}
 
 TriHitData traverseBVHClosest(vec3 rayOrigin, vec3 rayDir, float maxDist) {
     TriHitData hit;

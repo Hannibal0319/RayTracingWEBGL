@@ -1,4 +1,4 @@
-precision mediump float;
+precision highp float;
 
 // Scene Uniforms
 uniform vec2 u_resolution;

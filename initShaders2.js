@@ -75,7 +75,9 @@ function initShaders(gl, vShaderName, fShaderName) {
     gl.linkProgram(program);
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        alert("Could not initialise shaders");
+        alert("Could not initialise shaders, because linking failed. See console for details.");
+        console.error("Shader program linking error:");
+        console.error(gl.getProgramInfoLog(program));
         return null;
     }
 
