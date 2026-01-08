@@ -14,3 +14,20 @@ struct HitRecord {
     Material material;
     int objectID;
 };
+
+struct TriHitData {
+    float t;
+    vec3 normal;
+    vec3 diffuse;
+    vec3 info;
+    vec3 emission;
+    int triIndex;
+};
+
+struct BVHNodeData {
+    vec3 bmin;
+    vec3 bmax;
+    int childOrFirst;
+    int childOrCount;
+    bool leaf;
+};

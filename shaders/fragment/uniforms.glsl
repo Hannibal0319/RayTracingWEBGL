@@ -39,7 +39,7 @@ uniform int u_quadMaterialTypes[MAX_QUADS];
 uniform vec3 u_quadEmissionColors[MAX_QUADS];
 
 // Triangle Data via texture
-const int MAX_TRIANGLES = 20000;
+const int MAX_TRIANGLES = 80000;
 uniform int u_triangleCount;
 uniform highp sampler2D u_triTex;
 uniform vec2 u_triTexSize; // width = triangleCount, height = rows (6)

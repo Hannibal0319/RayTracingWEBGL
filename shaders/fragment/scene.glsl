@@ -24,13 +24,7 @@ bool bvhIntersectAABB(vec3 rayOrigin, vec3 invRayDir, vec3 boxMin, vec3 boxMax, 
     return tNear < tFar && tFar > 0.0;
 }
 
-struct BVHNodeData {
-    vec3 bmin;
-    vec3 bmax;
-    int childOrFirst;
-    int childOrCount;
-    bool leaf;
-};
+
 
 BVHNodeData fetchNode(int idx) {
     int width = int(u_bvhTexSize.x + 0.5);
@@ -58,14 +52,7 @@ void fetchTriangleData(int triIndex, out vec3 v0, out vec3 e1, out vec3 e2, out 
     emission = triTexFetch(triIndex, 5);
 }
 
-struct TriHitData {
-    float t;
-    vec3 normal;
-    vec3 diffuse;
-    vec3 info;
-    vec3 emission;
-    int triIndex;
-};
+
 
 TriHitData traverseBVHClosest(vec3 rayOrigin, vec3 rayDir, float maxDist) {
     TriHitData hit;

@@ -18,9 +18,9 @@ var meshBoundsMax = [0, 0, 0];
 const RENDER_SCALE = 1.0; // render at native canvas resolution
 
 // Shader-side triangle cap (must match MAX_TRIANGLES in fragment/uniforms.glsl)
-const MAX_TRIANGLES = 18000; // keep in sync with fragment/uniforms.glsl
+const MAX_TRIANGLES = 80000; // keep in sync with fragment/uniforms.glsl
 
-const M_GLASS = new Material([0.95, 0.95, 0.95], 0.9, 1.5, REFRACTIVE);
+const M_GLASS = new Material([0.95, 0.95, 0.95], 0.9, 1.01, REFRACTIVE);
 const M_LOW_REFRACT = new Material([0.9, 0.9, 0.9], 0.9, 1.5, REFRACTIVE);
 const M_GOLD = new Material([1.0, 0.71, 0.29], 0.7, 0.47, REFLECTIVE);
 const M_SILVER = new Material([0.6, 0.6, 0.6], 0.7, 0.14, REFLECTIVE);
@@ -33,19 +33,19 @@ const SCENE_DATA = {
     spheres: [
         //new Sphere([-2.0, -0.2, -5.0], 0.8, new Material([0.1, 0.3, 0.2], 0.9, 1.5, REFRACTIVE)),
         
-        new Sphere([-7.0, 0.0, -8.0], 1.0, M_GOLD),
+        new Sphere([0.0, 0.0, 10.0], 1.0, M_GLASS),
         
         //new Sphere([3.0, -0.4, -7.0], 0.6, new Material([0.8, 0.1, 0.1], 0.0, 1.0, LAMBERTIAN)),
 
         //new Sphere([0.0, 0.0, -7.0], 0.7, M_SILVER),
 
         // New emissive sphere light (soft, warm glow)
-        new Sphere([-1.0, 1.8, -4.5], 0.4, M_GOLD),
+        //new Sphere([-1.0, 1.8, -4.5], 0.4, M_GOLD),
     ],
 
     quads: [
-        new Quad([1.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], M_GOLD),
-        //new Quad([3.5, -0.5, -4.0], [0.0, 0.0, 1.0],[0.0, 1.0, 0.0], M_LIGHT_SOFT),
+        //new Quad([-5.5, -0.5, -4.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], M_GOLD),
+        //new Quad([3.5, 4, -4.0], [0.0, 0.0, 10.0],[0.0, 10.0, 0.0], M_LIGHT_SOFT),
 
     ],
 
@@ -56,7 +56,7 @@ const SCENE_DATA = {
     planeColorB: [0.5, 0.5, 0.5], 
     
     // Camera Controls
-    cameraPos: [0.0, 0.0, 0.0],
+    cameraPos: [0.0, 5.0, 0.0],
     cameraRotation: [0.0, 0.0],
     fov: 60.0,
     aperture: 0.000,
@@ -521,11 +521,26 @@ async function main() {
         rebuildBVH(SCENE_DATA.triangles);
         if (add_teapot) {
             await loadOBJIntoScene(
+                'models/bunny.obj',
+                M_GOLD,
+                true,
+                { targetSize: 6.0, translate: [0.0, 6.0, -10.0] }
+            );
+            /*
+            /*await loadOBJIntoScene(
                 'models/teapot.obj',
                 M_GOLD,
                 true,
-                { targetSize: 40.0, translate: [0.0, 15, -50.0] }
+                { targetSize: 10.0, translate: [5.0, 4.0, -10.0] }
+            );*/
+            /*
+            await loadOBJIntoScene(
+                'models/tree.obj',
+                M_SILVER,
+                true,
+                { targetSize: 10.0, translate: [-5.0, 3.0, -15.0] }
             );
+            */
         }
         setupMouseControls();
         setupWASDControls();

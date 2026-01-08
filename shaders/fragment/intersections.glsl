@@ -7,7 +7,7 @@ vec3 makeSafeDir(vec3 d) {
         (d.z > 0.0) ? max(d.z, 1e-6) : min(d.z, -1e-6)
     );
 }
-
+/*
 bool intersectAABB(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax) {
     vec3 invRayDir = 1.0 / makeSafeDir(rayDir);
     vec3 tMin = (boxMin - rayOrigin) * invRayDir;
@@ -29,7 +29,7 @@ bool intersectAABBWithT(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax, o
     tFar = min(min(t2.x, t2.y), t2.z);
     return tNear < tFar && tFar > 0.0;
 }
-
+*/
 float intersectSphere(vec3 rayOrigin, vec3 rayDir, vec3 center, float radius) {
     vec3 oc = rayOrigin - center;
     float a = dot(rayDir, rayDir);
